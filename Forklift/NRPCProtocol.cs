@@ -65,5 +65,10 @@ namespace Forklift
 
 			return unitString;
 		}
+
+		public void Test()
+		{
+			string unit = ReadUnitString();
+		}
 	}
 }

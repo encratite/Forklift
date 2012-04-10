@@ -64,6 +64,9 @@ namespace Forklift
 			X509CertificateCollection collection = new X509CertificateCollection();
 			collection.Add(certificate);
 			Stream.AuthenticateAsClient(Configuration.Server.CommonName, collection, SslProtocols.Ssl3, false);
+
+			NRPCProtocol protocolHandler = new NRPCProtocol(Stream);
+			protocolHandler.Test();
 		}
 	}
 }

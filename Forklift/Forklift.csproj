@@ -59,7 +59,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="NRPCException.cs" />
+    <Compile Include="NRPCProtocol.cs" />
     <Compile Include="ServerConfiguration.cs" />
+    <Compile Include="WarehouseClient.cs" />
     <Page Include="GUI\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
