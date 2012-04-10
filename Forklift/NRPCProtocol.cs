@@ -66,6 +66,12 @@ namespace Forklift
 			return unitString;
 		}
 
+		void SendUnit(string unitString)
+		{
+			string packet = unitString.Length.ToString() + ":" + unitString;
+			Stream.Write(Encoding.UTF8.GetBytes(packet));
+		}
+
 		public void Test()
 		{
 			string unit = ReadUnitString();

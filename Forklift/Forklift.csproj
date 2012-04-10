@@ -37,6 +37,9 @@
     <StartupObject>Forklift.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\References\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="Nil">
       <HintPath>..\References\Nil.dll</HintPath>
     </Reference>
@@ -61,6 +64,17 @@
     </ApplicationDefinition>
     <Compile Include="NRPCException.cs" />
     <Compile Include="NRPCProtocol.cs" />
+    <Compile Include="Protocol\BaseNotification.cs" />
+    <Compile Include="Protocol\Notification.cs" />
+    <Compile Include="Protocol\NotificationData.cs" />
+    <Compile Include="Protocol\Notification\DownloadDeletedNotification.cs" />
+    <Compile Include="Protocol\Notification\DownloadedNotification.cs" />
+    <Compile Include="Protocol\Notification\DownloadError.cs" />
+    <Compile Include="Protocol\Notification\QueuedNotification.cs" />
+    <Compile Include="Protocol\Notification\ServiceMessage.cs" />
+    <Compile Include="Protocol\ReleaseData.cs" />
+    <Compile Include="Protocol\RPCCall.cs" />
+    <Compile Include="Protocol\RPCResult.cs" />
     <Compile Include="ServerConfiguration.cs" />
     <Compile Include="WarehouseClient.cs" />
     <Page Include="GUI\MainWindow.xaml">
