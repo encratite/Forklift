@@ -1,14 +1,13 @@
-﻿using System.Collections.Generic;
-
-namespace Forklift
+﻿namespace Forklift
 {
-	public class QueuedNotification : BaseNotification
+	public class QueuedNotification : Notification
 	{
 		public readonly ReleaseData ReleaseData;
 
-		public QueuedNotification(Dictionary<string, object> input)
+		public QueuedNotification(NotificationData notificationData)
+			: base(notificationData)
 		{
-			ReleaseData = new ReleaseData(input);
+			ReleaseData = new ReleaseData(notificationData.Content);
 		}
 	}
 }

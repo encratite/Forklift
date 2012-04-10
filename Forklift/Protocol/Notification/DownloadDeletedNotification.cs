@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
-
-namespace Forklift
+﻿namespace Forklift
 {
-	public class DownloadDeletedNotification : BaseNotification
+	public class DownloadDeletedNotification : Notification
 	{
 		public readonly string Release;
 		public readonly string Reason;
 
-		public DownloadDeletedNotification(Dictionary<string, object> input)
+		public DownloadDeletedNotification(NotificationData notificationData)
+			: base(notificationData)
 		{
-			Release = (string)input["release"];
-			Reason = (string)input["reason"];
+			var content = notificationData.Content;
+			Release = (string)content["release"];
+			Reason = (string)content["reason"];
 		}
 	}
 }

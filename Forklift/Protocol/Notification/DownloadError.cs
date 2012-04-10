@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
-
-namespace Forklift
+﻿namespace Forklift
 {
-	public class DownloadErrorNotification : BaseNotification
+	public class DownloadError : Notification
 	{
 		public readonly string Release;
 		public readonly string Message;
 
-		public DownloadErrorNotification(Dictionary<string, object> input)
+		public DownloadError(NotificationData notificationData)
+			: base(notificationData)
 		{
-			Release = (string)input["release"];
-			Message = (string)input["message"];
+			var content = notificationData.Content;
+			Release = (string)content["release"];
+			Message = (string)content["message"];
 		}
 	}
 }

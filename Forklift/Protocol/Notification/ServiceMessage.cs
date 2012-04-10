@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
-
-namespace Forklift
+﻿namespace Forklift
 {
-	public class ServiceMessageNotification : BaseNotification
+	public class ServiceMessage : Notification
 	{
 		public readonly string Severity;
 		public readonly string Message;
 
-		public ServiceMessageNotification(Dictionary<string, object> input)
+		public ServiceMessage(NotificationData notificationData)
+			: base(notificationData)
 		{
-			Severity = (string)input["severity"];
-			Message = (string)input["message"];
+			var content = notificationData.Content;
+			Severity = (string)content["severity"];
+			Message = (string)content["message"];
 		}
 	}
 }

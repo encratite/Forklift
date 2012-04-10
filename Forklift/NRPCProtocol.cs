@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Net.Security;
 using System.Text;
+using System.Threading;
+
+using Newtonsoft.Json;
 
 namespace Forklift
 {
@@ -22,12 +25,18 @@ namespace Forklift
 			Buffer = "";
 		}
 
+		public void Run()
+		{
+			while (true)
+				ProcessUnit();
+		}
+
 		//Returns true if the connection is still alive
 		void ReadBlock()
 		{
 			int bytesRead = Stream.Read(ByteBuffer, 0, ByteBufferSize);
 			if (bytesRead == 0)
-				throw new NRPCException("The server has closed the connection");
+				throw new NRPCException("The connection has been closed");
 
 			string input = Encoding.UTF8.GetString(ByteBuffer);
 			Buffer += input;
@@ -66,15 +75,49 @@ namespace Forklift
 			return unitString;
 		}
 
-		void SendUnit(string unitString)
+		void ProcessUnit()
+		{
+			string unitString = ReadUnitString();
+			Unit unit = JsonConvert.DeserializeObject<Unit>(unitString);
+			if (unit.Type == "notification")
+			{
+				NotificationData baseNotification = new NotificationData(unit.Data);
+				if (baseNotification.Type == "queued")
+				{
+					QueuedNotification notification = new QueuedNotification(baseNotification);
+				}
+				else if (baseNotification.Type == "downloaded")
+				{
+					DownloadedNotification notification = new DownloadedNotification(baseNotification);
+				}
+				else if (baseNotification.Type == "downloadError")
+				{
+					DownloadError notification = new DownloadError(baseNotification);
+				}
+				else if (baseNotification.Type == "downloadDeleted")
+				{
+					DownloadDeletedNotification notification = new DownloadDeletedNotification(baseNotification);
+				}
+				else if (baseNotification.Type == "serviceMessage")
+				{
+					ServiceMessage notification = new ServiceMessage(baseNotification);
+				}
+				else
+					throw new NRPCException("Encountered an unknown notification type");
+			}
+			else
+				throw new NRPCException("Encountered an unknown unit type");
+		}
+
+		void SendUnitString(string unitString)
 		{
 			string packet = unitString.Length.ToString() + ":" + unitString;
 			Stream.Write(Encoding.UTF8.GetBytes(packet));
 		}
 
-		public void Test()
+		void SendUnit(object unit)
 		{
-			string unit = ReadUnitString();
+			SendUnitString(JsonConvert.SerializeObject(unit));
 		}
 	}
 }

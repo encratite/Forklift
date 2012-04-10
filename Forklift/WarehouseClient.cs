@@ -19,13 +19,14 @@ namespace Forklift
 		public WarehouseClient(Configuration configuration)
 		{
 			Configuration = configuration;
+			ClientThread = null;
 			Running = false;
 		}
 
 		public void Run()
 		{
-			ClientThread = new Thread(RunThread);
-			ClientThread.Name = "Notification/RPC thread";
+			ClientThread = new Thread(RunClient);
+			ClientThread.Name = "Warehouse Client Thread";
 			ClientThread.Start();
 			Running = true;
 		}
@@ -34,14 +35,15 @@ namespace Forklift
 		{
 			if (Running)
 			{
-				Running = false;
-				ClientThread.Join();
 				Stream.Close();
 				Client.Close();
+				ClientThread.Join();
+				Running = false;
+				ClientThread = null;
 			}
 		}
 
-		void RunThread()
+		void RunClient()
 		{
 			while (Running)
 			{
@@ -66,7 +68,6 @@ namespace Forklift
 			Stream.AuthenticateAsClient(Configuration.Server.CommonName, collection, SslProtocols.Ssl3, false);
 
 			NRPCProtocol protocolHandler = new NRPCProtocol(Stream);
-			protocolHandler.Test();
 		}
 	}
 }
