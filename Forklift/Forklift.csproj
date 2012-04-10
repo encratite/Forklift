@@ -64,8 +64,8 @@
     </ApplicationDefinition>
     <Compile Include="NRPCException.cs" />
     <Compile Include="NRPCProtocol.cs" />
-    <Compile Include="Protocol\BaseNotification.cs" />
     <Compile Include="Protocol\Notification.cs" />
+    <Compile Include="Protocol\Unit.cs" />
     <Compile Include="Protocol\NotificationData.cs" />
     <Compile Include="Protocol\Notification\DownloadDeletedNotification.cs" />
     <Compile Include="Protocol\Notification\DownloadedNotification.cs" />
