@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Security;
 using System.Text;
 using System.Threading;
@@ -9,13 +10,23 @@ namespace Forklift
 {
 	class NRPCProtocol
 	{
+		public delegate void RPCResultCallback(params object[] arguments);
+
 		const int MaximumBufferSize = 0x400 * ByteBufferSize;
 		const int ByteBufferSize = 0x1000;
+
+		const string GetNewNotificationsMethod = "getNewNotifications";
+		const string GetNotificationCountMethod = "getNotificationCount";
+		const string GetOldNotificationsMethod = "getOldNotifications";
+		const string GenerateNotificationMethod = "generateNotification";
 
 		SslStream Stream;
 
 		byte[] ByteBuffer;
 		string Buffer;
+
+		int CallCounter;
+		Dictionary<int, RPCResultCallback> Callbacks;
 
 		public NRPCProtocol(SslStream stream)
 		{
@@ -23,6 +34,9 @@ namespace Forklift
 
 			ByteBuffer = new byte[ByteBufferSize];
 			Buffer = "";
+
+			CallCounter = 1;
+			Callbacks = new Dictionary<int, RPCResultCallback>();
 		}
 
 		public void Run()
@@ -75,6 +89,11 @@ namespace Forklift
 			return unitString;
 		}
 
+		void NotImplemented()
+		{
+			throw new NRPCException("This feature has not been implemented yet");
+		}
+
 		void ProcessUnit()
 		{
 			string unitString = ReadUnitString();
@@ -85,25 +104,46 @@ namespace Forklift
 				if (baseNotification.Type == "queued")
 				{
 					QueuedNotification notification = new QueuedNotification(baseNotification);
+					NotImplemented();
 				}
 				else if (baseNotification.Type == "downloaded")
 				{
 					DownloadedNotification notification = new DownloadedNotification(baseNotification);
+					NotImplemented();
 				}
 				else if (baseNotification.Type == "downloadError")
 				{
 					DownloadError notification = new DownloadError(baseNotification);
+					NotImplemented();
 				}
 				else if (baseNotification.Type == "downloadDeleted")
 				{
 					DownloadDeletedNotification notification = new DownloadDeletedNotification(baseNotification);
+					NotImplemented();
 				}
 				else if (baseNotification.Type == "serviceMessage")
 				{
 					ServiceMessage notification = new ServiceMessage(baseNotification);
+					NotImplemented();
 				}
 				else
 					throw new NRPCException("Encountered an unknown notification type");
+			}
+			else if (unit.Type == "rpcResult")
+			{
+				RPCResult result = new RPCResult(unit.Data);
+				RPCResultCallback callback;
+				if (!Callbacks.TryGetValue(result.Id, out callback))
+					throw new NRPCException("Server provided an invalid RPC result ID");
+				Callbacks.Remove(result.Id);
+				if (result.Error == null)
+					callback(result.Result);
+				else
+					throw new NRPCException(string.Format("RPC error: {0}", result.Error));
+			}
+			else if (unit.Type == "ping")
+			{
+				//Ignore pings
 			}
 			else
 				throw new NRPCException("Encountered an unknown unit type");
@@ -118,6 +158,34 @@ namespace Forklift
 		void SendUnit(object unit)
 		{
 			SendUnitString(JsonConvert.SerializeObject(unit));
+		}
+
+		void PerformRPC(RPCResultCallback callback, string method, params object[] arguments)
+		{
+			RPCCall call = new RPCCall(CallCounter, method, arguments);
+			SendUnit(call);
+			Callbacks[CallCounter] = callback;
+			CallCounter++;
+		}
+
+		void GetNewNotifications(RPCResultCallback callback)
+		{
+			PerformRPC(callback, GetNewNotificationsMethod);
+		}
+
+		void GetNotificationCount(RPCResultCallback callback)
+		{
+			PerformRPC(callback, GetNotificationCountMethod);
+		}
+
+		void GetOldNotifications(RPCResultCallback callback, int firstIndex, int lastIndex)
+		{
+			PerformRPC(callback, GetOldNotificationsMethod, firstIndex, lastIndex);
+		}
+
+		void GenerateNotification(RPCResultCallback callback, string type, string content)
+		{
+			PerformRPC(callback, GenerateNotificationMethod, type, content);
 		}
 	}
 }
