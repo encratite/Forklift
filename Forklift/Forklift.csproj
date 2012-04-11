@@ -36,6 +36,9 @@
   <PropertyGroup>
     <StartupObject>Forklift.Program</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Resource\Forklift.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\References\Newtonsoft.Json.dll</HintPath>
@@ -63,7 +66,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Database.cs" />
-    <Compile Include="GUI\DescriptionConverter.cs" />
     <Compile Include="GUI\MainWindowDataContext.cs" />
     <Compile Include="Interface\IOutputHandler.cs" />
     <Compile Include="NRPCException.cs" />
@@ -121,6 +123,9 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resource\Forklift.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
