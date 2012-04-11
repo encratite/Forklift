@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Media;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using System.Diagnostics;
 using System.Threading;
 
 using Newtonsoft.Json;
@@ -90,8 +92,9 @@ namespace Forklift
 			WriteLine("Saved {0} notifications in {1} ms", Database.Notifications.Count, stopwatch.ElapsedMilliseconds);
 		}
 
-		void StoreNotification(Notification notification)
+		void NewNotification(Notification notification)
 		{
+			PlayNotificationSound(notification);
 			lock (Database)
 			{
 				Database.Notifications.Add(notification);
@@ -167,11 +170,14 @@ namespace Forklift
 			JArray notificationObjects = (JArray)arguments[0];
 			WriteLine("Downloaded {0} new notification(s) in {1} ms", notificationObjects.Count, NotificationRetrievalTimer.ElapsedMilliseconds);
 			List<Notification> newNotifications = new List<Notification>();
+			bool errorOccurred = false;
 			foreach (var notificationObject in notificationObjects)
 			{
 				try
 				{
 					Notification notification = NRPCProtocol.GetNotification(notificationObject);
+					if (notification.GetNotificationType() != NotificationType.Routine)
+						errorOccurred = true;
 					newNotifications.Add(notification);
 				}
 				catch (NRPCException)
@@ -179,6 +185,10 @@ namespace Forklift
 					//This is probably an old test exception, ignore it
 				}
 			}
+			if (errorOccurred)
+				PlayErrorSound();
+			else
+				PlayNotificationSound();
 			//Make sure that the notifications are in the right order, commencing with the oldest one
 			newNotifications.Sort((x, y) => x.Time.CompareTo(y.Time));
 			lock (Database)
@@ -189,34 +199,64 @@ namespace Forklift
 			SaveDatabase();
 		}
 
+		void PlaySound(UnmanagedMemoryStream resource)
+		{
+			SoundPlayer player = new SoundPlayer(resource);
+			player.Play();
+		}
+
+		void PlayNotificationSound()
+		{
+			PlaySound(Properties.Resources.NotificationSound);
+		}
+
+		void PlayErrorSound()
+		{
+			PlaySound(Properties.Resources.ErrorSound);
+		}
+
+		void PlayNotificationSound(Notification notification)
+		{
+			switch (notification.GetNotificationType())
+			{
+				case NotificationType.Routine:
+					PlayNotificationSound();
+					break;
+
+				default:
+					PlayErrorSound();
+					break;
+			}
+		}
+
 		public void HandleQueuedNotification(QueuedNotification notification)
 		{
 			WriteLine("[{0}] Queued: {1}", notification.Time, notification.Name);
-			StoreNotification(notification);
+			NewNotification(notification);
 		}
 
 		public void HandleDownloadedNotification(DownloadedNotification notification)
 		{
 			WriteLine("[{0}] Downloaded: {1}", notification.Time, notification.Name);
-			StoreNotification(notification);
+			NewNotification(notification);
 		}
 
 		public void HandleDownloadError(DownloadError notification)
 		{
 			WriteLine("[{0}] Download error for release \"{1}\": {2}", notification.Time, notification.Release, notification.Message);
-			StoreNotification(notification);
+			NewNotification(notification);
 		}
 
 		public void HandleDownloadDeletedNotification(DownloadDeletedNotification notification)
 		{
 			WriteLine("[{0}] Removed release \"{1}\": {2}", notification.Time, notification.Release, notification.Reason);
-			StoreNotification(notification);
+			NewNotification(notification);
 		}
 
 		public void HandleServiceMessage(ServiceMessage notification)
 		{
 			WriteLine("[{0}] Service message of level \"{1}\": {2}", notification.Time, notification.Severity, notification.Message);
-			StoreNotification(notification);
+			NewNotification(notification);
 		}
 
 		public void HandlePing()
@@ -226,6 +266,7 @@ namespace Forklift
 		public void HandleError(string message)
 		{
 			WriteLine("Protocol error: {0}", message);
+			PlayErrorSound();
 		}
 
 		public void WriteLine(string message, params object[] arguments)

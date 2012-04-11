@@ -8,6 +8,13 @@ using Nil;
 
 namespace Forklift
 {
+	public enum NotificationType
+	{
+		Routine,
+		Information,
+		Error,
+	}
+
 	[XmlInclude(typeof(QueuedNotification))]
 	[XmlInclude(typeof(DownloadedNotification))]
 	[XmlInclude(typeof(DownloadError))]
@@ -92,5 +99,6 @@ namespace Forklift
 		}
 
 		protected abstract string GetDescription();
+		public abstract NotificationType GetNotificationType();
 	}
 }

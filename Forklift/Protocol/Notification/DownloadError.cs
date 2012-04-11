@@ -14,5 +14,10 @@ namespace Forklift
 		{
 			return string.Format("Download error in release \"{0}\": {1}", Release, Message);
 		}
+
+		public override NotificationType GetNotificationType()
+		{
+			return NotificationType.Error;
+		}
 	}
 }

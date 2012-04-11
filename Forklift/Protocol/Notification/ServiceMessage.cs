@@ -14,5 +14,13 @@ namespace Forklift
 		{
 			return string.Format("Service message level \"{0}\": {1}", Severity, Message);
 		}
+
+		public override NotificationType GetNotificationType()
+		{
+			if (Severity == "warning" || Severity == "error")
+				return NotificationType.Error;
+			else
+				return NotificationType.Information;
+		}
 	}
 }

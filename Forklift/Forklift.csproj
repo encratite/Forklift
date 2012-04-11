@@ -37,7 +37,7 @@
     <StartupObject>Forklift.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Resource\Forklift.ico</ApplicationIcon>
+    <ApplicationIcon>Resource\Icon\Forklift.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json">
@@ -125,7 +125,11 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resource\Forklift.ico" />
+    <Resource Include="Resource\Icon\Forklift.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resource\Sound\Error.wav" />
+    <Content Include="Resource\Sound\Notification.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
