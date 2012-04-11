@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Security.Authentication;
@@ -6,6 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Forklift
 {
@@ -17,6 +19,8 @@ namespace Forklift
 
 		TcpClient Client;
 		SslStream Stream;
+
+		NRPCProtocol ProtocolHandler;
 
 		public WarehouseClient(Configuration configuration)
 		{
@@ -72,34 +76,43 @@ namespace Forklift
 			collection.Add(certificate);
 			Stream.AuthenticateAsClient(Configuration.Server.CommonName, collection, SslProtocols.Ssl3, false);
 
-			NRPCProtocol protocolHandler = new NRPCProtocol(Stream, this);
-			protocolHandler.GetNotificationCount(GetNotificationCountCallback);
-			ServiceMessage message = new ServiceMessage();
-			message.Severity = "error";
-			message.Message = "This is a test.";
-			protocolHandler.GenerateNotification(GenerateNotificationCallback, "serviceMessage", message);
+			ProtocolHandler = new NRPCProtocol(Stream, this);
+			ProtocolHandler.GetNotificationCount(GetNotificationCountCallback);
 			while (Running)
-				protocolHandler.ProcessUnit();
+				ProtocolHandler.ProcessUnit();
 		}
 
 		public void GetNotificationCountCallback(object[] arguments)
 		{
 			long count = (long)arguments[0];
-			Console.WriteLine("Count: {0}", count);
+			Console.WriteLine("Total notification count: {0}", count);
+			//ProtocolHandler.GetNotifications(GetNotificationsCallback, 0, (int)(count - 1));
+			ProtocolHandler.GetNotifications(GetNotificationsCallback, 0, 100);
 		}
 
 		public void GenerateNotificationCallback(object[] arguments)
 		{
 		}
 
+		public void GetNotificationsCallback(object[] arguments)
+		{
+			List<Notification> notifications = new List<Notification>();
+			JArray notificationObjects = (JArray)arguments[0];
+			foreach (var notificationObject in notificationObjects)
+			{
+				Notification notification = NRPCProtocol.GetNotification(notificationObject);
+				notifications.Add(notification);
+			}
+		}
+
 		public void HandleQueuedNotification(QueuedNotification notification)
 		{
-			Console.WriteLine("[{0}] Queued: {1}", notification.Time, notification.ReleaseData);
+			Console.WriteLine("[{0}] Queued: {1}", notification.Time, notification.Name);
 		}
 
 		public void HandleDownloadedNotification(DownloadedNotification notification)
 		{
-			Console.WriteLine("[{0}] Downloaded: {1}", notification.Time, notification.ReleaseData);
+			Console.WriteLine("[{0}] Downloaded: {1}", notification.Time, notification.Name);
 		}
 
 		public void HandleDownloadError(DownloadError notification)

@@ -18,7 +18,7 @@ namespace Forklift
 
 		const string GetNewNotificationsMethod = "getNewNotifications";
 		const string GetNotificationCountMethod = "getNotificationCount";
-		const string GetOldNotificationsMethod = "getOldNotifications";
+		const string GetNotificationsMethod = "getNotifications";
 		const string GenerateNotificationMethod = "generateNotification";
 
 		SslStream Stream;
@@ -93,18 +93,35 @@ namespace Forklift
 			throw new NRPCException("This feature has not been implemented yet");
 		}
 
-		DeserialisedType DeserialiseObject<DeserialisedType>(object input)
+		public static DeserialisedType DeserialiseObject<DeserialisedType>(object input)
 		{
 			JsonSerializer serialiser = new JsonSerializer();
 			DeserialisedType output = (DeserialisedType)serialiser.Deserialize<DeserialisedType>(new JTokenReader((JObject)input));
 			return output;
 		}
 
-		DeserialisedType DeserialiseNotification<DeserialisedType>(NotificationData baseNotification) where DeserialisedType : Notification
+		public static DeserialisedType DeserialiseNotification<DeserialisedType>(NotificationData baseNotification) where DeserialisedType : Notification
 		{
 			DeserialisedType output = DeserialiseObject<DeserialisedType>(baseNotification.Content);
 			output.Time = baseNotification.Time;
 			return output;
+		}
+
+		public static Notification GetNotification(object input)
+		{
+			NotificationData baseNotification = DeserialiseObject<NotificationData>(input);
+			if (baseNotification.Type == "queued")
+				return DeserialiseNotification<QueuedNotification>(baseNotification);
+			else if (baseNotification.Type == "downloaded")
+				return DeserialiseNotification<DownloadedNotification>(baseNotification);
+			else if (baseNotification.Type == "downloadError")
+				return DeserialiseNotification<DownloadError>(baseNotification);
+			else if (baseNotification.Type == "downloadDeleted")
+				return DeserialiseNotification<DownloadDeletedNotification>(baseNotification);
+			else if (baseNotification.Type == "serviceMessage")
+				return DeserialiseNotification<ServiceMessage>(baseNotification);
+			else
+				throw new NRPCException("Encountered an unknown notification type string");
 		}
 
 		public void ProcessUnit()
@@ -113,34 +130,20 @@ namespace Forklift
 			Unit unit = JsonConvert.DeserializeObject<Unit>(unitString);
 			if (unit.Type == "notification")
 			{
-				NotificationData baseNotification = DeserialiseObject<NotificationData>(unit.Data);
-				if (baseNotification.Type == "queued")
-				{
-					QueuedNotification notification = DeserialiseNotification<QueuedNotification>(baseNotification);
-					NotificationHandler.HandleQueuedNotification(notification);
-				}
-				else if (baseNotification.Type == "downloaded")
-				{
-					DownloadedNotification notification = DeserialiseNotification<DownloadedNotification>(baseNotification);
-					NotificationHandler.HandleDownloadedNotification(notification);
-				}
-				else if (baseNotification.Type == "downloadError")
-				{
-					DownloadError notification = DeserialiseNotification<DownloadError>(baseNotification);
-					NotificationHandler.HandleDownloadError(notification);
-				}
-				else if (baseNotification.Type == "downloadDeleted")
-				{
-					DownloadDeletedNotification notification = DeserialiseNotification<DownloadDeletedNotification>(baseNotification);
-					NotificationHandler.HandleDownloadDeletedNotification(notification);
-				}
-				else if (baseNotification.Type == "serviceMessage")
-				{
-					ServiceMessage notification = DeserialiseNotification<ServiceMessage>(baseNotification);
-					NotificationHandler.HandleServiceMessage(notification);
-				}
+				Notification notification = GetNotification(unit.Data);
+				Type notificationType = notification.GetType();
+				if (notificationType == typeof(QueuedNotification))
+					NotificationHandler.HandleQueuedNotification((QueuedNotification)notification);
+				else if (notificationType == typeof(DownloadedNotification))
+					NotificationHandler.HandleDownloadedNotification((DownloadedNotification)notification);
+				else if (notificationType == typeof(DownloadError))
+					NotificationHandler.HandleDownloadError((DownloadError)notification);
+				else if (notificationType == typeof(DownloadDeletedNotification))
+					NotificationHandler.HandleDownloadDeletedNotification((DownloadDeletedNotification)notification);
+				else if (notificationType == typeof(ServiceMessage))
+					NotificationHandler.HandleServiceMessage((ServiceMessage)notification);
 				else
-					throw new NRPCException("Encountered an unknown notification type");
+					throw new NRPCException("Encountered an unknown notification class type");
 			}
 			else if (unit.Type == "rpcResult")
 			{
@@ -195,9 +198,9 @@ namespace Forklift
 			PerformRPC(callback, GetNotificationCountMethod);
 		}
 
-		public void GetOldNotifications(RPCResultCallback callback, int firstIndex, int lastIndex)
+		public void GetNotifications(RPCResultCallback callback, int firstIndex, int lastIndex)
 		{
-			PerformRPC(callback, GetOldNotificationsMethod, firstIndex, lastIndex);
+			PerformRPC(callback, GetNotificationsMethod, firstIndex, lastIndex);
 		}
 
 		public void GenerateNotification(RPCResultCallback callback, string type, object content)

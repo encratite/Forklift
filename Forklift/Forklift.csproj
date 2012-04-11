@@ -73,10 +73,11 @@
     <Compile Include="Protocol\Notification\DownloadError.cs" />
     <Compile Include="Protocol\Notification\QueuedNotification.cs" />
     <Compile Include="Protocol\Notification\ServiceMessage.cs" />
-    <Compile Include="Protocol\ReleaseData.cs" />
+    <Compile Include="Protocol\Notification\ReleaseDataNotification.cs" />
     <Compile Include="Protocol\RPCCall.cs" />
     <Compile Include="Protocol\RPCResult.cs" />
     <Compile Include="ServerConfiguration.cs" />
+    <Compile Include="UnixDateTimeConverter.cs" />
     <Compile Include="WarehouseClient.cs" />
     <Page Include="GUI\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

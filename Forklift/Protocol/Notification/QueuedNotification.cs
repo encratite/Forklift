@@ -1,7 +1,6 @@
 ﻿namespace Forklift
 {
-	public class QueuedNotification : Notification
+	public class QueuedNotification : ReleaseDataNotification
 	{
-		public ReleaseData ReleaseData;
 	}
 }
