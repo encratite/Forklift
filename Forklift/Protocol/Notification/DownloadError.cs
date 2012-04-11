@@ -15,6 +15,11 @@ namespace Forklift
 			return string.Format("Download error in release \"{0}\": {1}", Release, Message);
 		}
 
+		protected override string GetImageString()
+		{
+			return "DownloadError";
+		}
+
 		public override NotificationType GetNotificationType()
 		{
 			return NotificationType.Error;

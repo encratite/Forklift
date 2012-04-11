@@ -16,9 +16,44 @@
 						<Setter Property="Foreground" Value="{Binding Path=Colour}"></Setter>
 					</Style.Setters>
 				</Style>
+				<Style TargetType="{x:Type DataGridCell}">
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="{x:Type DataGridCell}">
+								<Grid Background="{TemplateBinding Background}">
+									<ContentPresenter VerticalAlignment="Center" />
+								</Grid>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
 			</DataGrid.Resources>
 			<DataGrid.Columns>
-				<DataGridTextColumn Header="Icon" Width="50"/>
+				
+				<DataGridTemplateColumn Width="30">
+					<DataGridTemplateColumn.CellTemplate >
+						<DataTemplate>
+							<Image Name="image" Height="16" />
+							<DataTemplate.Triggers>
+								<DataTrigger Binding="{Binding ImageString}" Value="DownloadDeleted">
+									<Setter TargetName="image" Property="Source" Value="/Resource/Image/DownloadDeleted.png" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding ImageString}" Value="DownloadError">
+									<Setter TargetName="image" Property="Source" Value="/Resource/Image/DownloadError.png" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding ImageString}" Value="ReleaseDownloaded">
+									<Setter TargetName="image" Property="Source" Value="/Resource/Image/ReleaseDownloaded.png" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding ImageString}" Value="ReleaseQueued">
+									<Setter TargetName="image" Property="Source" Value="/Resource/Image/ReleaseQueued.png" />
+								</DataTrigger>
+								<DataTrigger Binding="{Binding ImageString}" Value="ServiceMessage">
+									<Setter TargetName="image" Property="Source" Value="/Resource/Image/ServiceMessage.png" />
+								</DataTrigger>
+							</DataTemplate.Triggers>
+						</DataTemplate>
+					</DataGridTemplateColumn.CellTemplate>
+				</DataGridTemplateColumn>
 				<DataGridTextColumn Header="Event" Binding="{Binding Description}" Width="*" />
 				<DataGridTextColumn Header="Time" Binding="{Binding TimeString}" Width="130"/>
 			</DataGrid.Columns>

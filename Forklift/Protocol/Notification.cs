@@ -83,6 +83,25 @@ namespace Forklift
 			}
 		}
 
+		[XmlIgnore]
+		[JsonIgnore]
+		string imageString;
+
+		[JsonIgnore]
+		public string ImageString
+		{
+			get
+			{
+				return imageString;
+			}
+
+			set
+			{
+				imageString = value;
+				Notify("ImageString");
+			}
+		}
+
 		void Notify(string propertyName)
 		{
 			if (PropertyChanged != null)
@@ -94,11 +113,14 @@ namespace Forklift
 		public void Initialise(bool isNew)
 		{
 			Description = GetDescription();
+			TimeString = Time.ToStandardString();
 			Colour = isNew ? "Green" : "Black";
-			timeString = Time.ToStandardString();
+			ImageString = GetImageString();
 		}
 
 		protected abstract string GetDescription();
+		protected abstract string GetImageString();
+
 		public abstract NotificationType GetNotificationType();
 	}
 }

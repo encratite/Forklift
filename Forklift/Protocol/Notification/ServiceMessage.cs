@@ -15,6 +15,11 @@ namespace Forklift
 			return string.Format("Service message level \"{0}\": {1}", Severity, Message);
 		}
 
+		protected override string GetImageString()
+		{
+			return "ServiceMessage";
+		}
+
 		public override NotificationType GetNotificationType()
 		{
 			if (Severity == "warning" || Severity == "error")
