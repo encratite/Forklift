@@ -4,6 +4,7 @@
 	{
 		public ServerConfiguration Server;
 
+		public string Database;
 		public string ClientCertificate;
 	}
 }

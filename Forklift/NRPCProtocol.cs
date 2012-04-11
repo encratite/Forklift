@@ -24,6 +24,8 @@ namespace Forklift
 		SslStream Stream;
 
 		INotificationHandler NotificationHandler;
+		IOutputHandler OutputHandler;
+
 
 		byte[] ByteBuffer;
 		string Buffer;
@@ -31,11 +33,12 @@ namespace Forklift
 		int CallCounter;
 		Dictionary<int, RPCResultCallback> Callbacks;
 
-		public NRPCProtocol(SslStream stream, INotificationHandler notificationHandler)
+		public NRPCProtocol(SslStream stream, INotificationHandler notificationHandler, IOutputHandler outputHandler)
 		{
 			Stream = stream;
 
 			NotificationHandler = notificationHandler;
+			OutputHandler = outputHandler;
 
 			ByteBuffer = new byte[ByteBufferSize];
 			Buffer = "";
@@ -198,7 +201,7 @@ namespace Forklift
 			PerformRPC(callback, GetNotificationCountMethod);
 		}
 
-		public void GetNotifications(RPCResultCallback callback, int firstIndex, int lastIndex)
+		public void GetNotifications(RPCResultCallback callback, long firstIndex, long lastIndex)
 		{
 			PerformRPC(callback, GetNotificationsMethod, firstIndex, lastIndex);
 		}

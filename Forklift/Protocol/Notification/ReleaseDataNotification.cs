@@ -10,7 +10,7 @@ namespace Forklift
 		public string Site;
 
 		[JsonProperty("siteId")]
-		public int SiteId;
+		public long SiteId;
 
 		[JsonProperty("name")]
 		public string Name;
@@ -21,7 +21,7 @@ namespace Forklift
 		public DateTime ReleaseTime;
 
 		[JsonProperty("size")]
-		public int Size;
+		public long Size;
 
 		[JsonProperty("isManual")]
 		public bool IsManual;

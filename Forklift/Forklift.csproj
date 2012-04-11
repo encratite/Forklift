@@ -62,9 +62,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Database.cs" />
+    <Compile Include="Interface\IOutputHandler.cs" />
     <Compile Include="NRPCException.cs" />
     <Compile Include="NRPCProtocol.cs" />
-    <Compile Include="Protocol\INotificationHandler.cs" />
+    <Compile Include="Interface\INotificationHandler.cs" />
     <Compile Include="Protocol\Notification.cs" />
     <Compile Include="Protocol\Unit.cs" />
     <Compile Include="Protocol\NotificationData.cs" />
