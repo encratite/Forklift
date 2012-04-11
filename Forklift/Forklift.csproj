@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{3A84F97C-F528-428C-94AF-1FD517F33193}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Forklift</RootNamespace>
     <AssemblyName>Forklift</AssemblyName>
@@ -64,6 +64,7 @@
     </ApplicationDefinition>
     <Compile Include="NRPCException.cs" />
     <Compile Include="NRPCProtocol.cs" />
+    <Compile Include="Protocol\INotificationHandler.cs" />
     <Compile Include="Protocol\Notification.cs" />
     <Compile Include="Protocol\Unit.cs" />
     <Compile Include="Protocol\NotificationData.cs" />

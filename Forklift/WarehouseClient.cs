@@ -7,7 +7,7 @@ using System.Threading;
 
 namespace Forklift
 {
-	class WarehouseClient
+	class WarehouseClient : INotificationHandler
 	{
 		Configuration Configuration;
 		Thread ClientThread;
@@ -47,6 +47,7 @@ namespace Forklift
 		{
 			while (Running)
 			{
+				/*
 				try
 				{
 					ProcessConnection();
@@ -55,6 +56,8 @@ namespace Forklift
 				{
 					Console.WriteLine("NRPC exception: {0}", exception);
 				}
+				*/
+				ProcessConnection();
 			}
 		}
 
@@ -67,7 +70,45 @@ namespace Forklift
 			collection.Add(certificate);
 			Stream.AuthenticateAsClient(Configuration.Server.CommonName, collection, SslProtocols.Ssl3, false);
 
-			NRPCProtocol protocolHandler = new NRPCProtocol(Stream);
+			NRPCProtocol protocolHandler = new NRPCProtocol(Stream, this);
+			protocolHandler.GetNotificationCount(GetNotificationCountCallback);
+			while (Running)
+				protocolHandler.ProcessUnit();
+		}
+
+		public void GetNotificationCountCallback(object[] arguments)
+		{
+			long count = (long)arguments[0];
+			Console.WriteLine("Count: {0}", count);
+		}
+
+		public void HandleQueuedNotification(QueuedNotification notification)
+		{
+		}
+
+		public void HandleDownloadedNotification(DownloadedNotification notification)
+		{
+		}
+
+		public void HandleDownloadError(DownloadError notification)
+		{
+		}
+
+		public void HandleDownloadDeletedNotification(DownloadDeletedNotification notification)
+		{
+		}
+
+		public void HandleServiceMessage(ServiceMessage notification)
+		{
+		}
+
+		public void HandlePing()
+		{
+		}
+
+		public void HandleError(string message)
+		{
+			Console.WriteLine("Protocol error: {0}", message);
 		}
 	}
 }

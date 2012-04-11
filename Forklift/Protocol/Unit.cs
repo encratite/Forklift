@@ -1,11 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 
 namespace Forklift
 {
 	public class Unit
 	{
+		[JsonProperty("type")]
 		public string Type;
-		public Dictionary<string, object> Data;
+
+		[JsonProperty("data")]
+		public object Data;
+
+		public Unit()
+		{
+		}
+
+		public Unit(RPCCall call)
+		{
+			Type = "rpc";
+			Data = call;
+		}
 	}
 }
