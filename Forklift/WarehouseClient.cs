@@ -238,31 +238,26 @@ namespace Forklift
 
 		public void HandleQueuedNotification(QueuedNotification notification)
 		{
-			WriteLine("[{0}] Queued: {1}", notification.Time, notification.Name);
 			NewNotification(notification);
 		}
 
 		public void HandleDownloadedNotification(DownloadedNotification notification)
 		{
-			WriteLine("[{0}] Downloaded: {1}", notification.Time, notification.Name);
 			NewNotification(notification);
 		}
 
 		public void HandleDownloadError(DownloadError notification)
 		{
-			WriteLine("[{0}] Download error for release \"{1}\": {2}", notification.Time, notification.Release, notification.Message);
 			NewNotification(notification);
 		}
 
 		public void HandleDownloadDeletedNotification(DownloadDeletedNotification notification)
 		{
-			WriteLine("[{0}] Removed release \"{1}\": {2}", notification.Time, notification.Release, notification.Reason);
 			NewNotification(notification);
 		}
 
 		public void HandleServiceMessage(ServiceMessage notification)
 		{
-			WriteLine("[{0}] Service message of level \"{1}\": {2}", notification.Time, notification.Severity, notification.Message);
 			NewNotification(notification);
 		}
 
