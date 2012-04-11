@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reflection;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -14,14 +16,48 @@ using System.Windows.Shapes;
 
 namespace Forklift
 {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
 	public partial class MainWindow : Window
 	{
-		public MainWindow()
+		WarehouseClient WarehouseClient;
+
+		bool IsFirstLine;
+
+		public MainWindow(WarehouseClient warehouseClient)
 		{
+			WarehouseClient = warehouseClient;
+
+			IsFirstLine = true;
+
 			InitializeComponent();
+
+			int revision = Assembly.GetEntryAssembly().GetName().Version.Revision;
+			Title = string.Format("Forklift r{0}", revision);
+		}
+
+		void WindowClosing(object sender, CancelEventArgs arguments)
+		{
+			WarehouseClient.Terminate();
+		}
+
+		public void WriteLine(string message, params object[] arguments)
+		{
+			message = string.Format(message, arguments);
+			message = string.Format("{0} {1}", Nil.Time.Timestamp(), message);
+			if (IsFirstLine)
+				IsFirstLine = false;
+			else
+				message = "\n" + message;
+
+			var action = (Action)delegate
+			{
+				lock (OutputTextBox)
+				{
+					OutputTextBox.AppendText(message);
+					OutputTextBox.ScrollToEnd();
+				}
+			};
+
+			OutputTextBox.Dispatcher.Invoke(action);
 		}
 	}
 }

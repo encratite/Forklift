@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Xml;
 
 using Nil;
@@ -10,6 +9,7 @@ namespace Forklift
 	{
 		const string ConfigurationFile = "Configuration.xml";
 
+		[STAThread]
 		public static void Main(string[] arguments)
 		{
 			Configuration configuration;
@@ -24,10 +24,8 @@ namespace Forklift
 				return;
 			}
 
-			AutoResetEvent test = new AutoResetEvent(false);
 			WarehouseClient client = new WarehouseClient(configuration);
 			client.Run();
-			test.WaitOne();
 		}
 	}
 }

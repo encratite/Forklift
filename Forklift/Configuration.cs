@@ -6,5 +6,6 @@
 
 		public string Database;
 		public string ClientCertificate;
+		public int ReconnectDelay;
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Security;
 using System.Text;
 using System.Threading;
@@ -50,12 +51,19 @@ namespace Forklift
 		//Returns true if the connection is still alive
 		void ReadBlock()
 		{
-			int bytesRead = Stream.Read(ByteBuffer, 0, ByteBufferSize);
-			if (bytesRead == 0)
-				throw new NRPCException("The connection has been closed");
+			try
+			{
+				int bytesRead = Stream.Read(ByteBuffer, 0, ByteBufferSize);
+				if (bytesRead == 0)
+					throw new NRPCException("The connection has been closed");
 
-			string input = Encoding.UTF8.GetString(ByteBuffer, 0, bytesRead);
-			Buffer += input;
+				string input = Encoding.UTF8.GetString(ByteBuffer, 0, bytesRead);
+				Buffer += input;
+			}
+			catch (IOException exception)
+			{
+				throw new NRPCException(string.Format("IO exception: {0}", exception));
+			}
 		}
 
 		//Returns null if the connection was terminated

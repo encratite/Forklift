@@ -12,7 +12,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Forklift
 {
-	class WarehouseClient : INotificationHandler, IOutputHandler
+	public class WarehouseClient : INotificationHandler, IOutputHandler
 	{
 		Configuration Configuration;
 		Thread ClientThread;
@@ -30,6 +30,8 @@ namespace Forklift
 
 		long ServerNotificationCount;
 
+		MainWindow MainWindow;
+
 		public WarehouseClient(Configuration configuration)
 		{
 			Configuration = configuration;
@@ -39,6 +41,8 @@ namespace Forklift
 			NotificationRetrievalTimer = new Stopwatch();
 
 			LoadDatabase();
+
+			MainWindow = new MainWindow(this);
 		}
 
 		public void Run()
@@ -49,6 +53,8 @@ namespace Forklift
 			ClientThread.Name = "Warehouse Client Thread";
 			ClientThread.Start();
 			Running = true;
+
+			MainWindow.ShowDialog();
 		}
 
 		public void Terminate()
@@ -57,10 +63,10 @@ namespace Forklift
 			{
 				if (Running)
 				{
+					Running = false;
 					Stream.Close();
 					Client.Close();
 					ClientThread.Join();
-					Running = false;
 					ClientThread = null;
 				}
 			}
@@ -70,7 +76,6 @@ namespace Forklift
 		{
 			Serialiser = new Nil.Serialiser<Database>(Configuration.Database);
 			Database = Serialiser.Load();
-			WriteLine("Number of notifications stored in the local database: {0}", Database.Notifications.Count);
 		}
 
 		void SaveDatabase()
@@ -98,20 +103,41 @@ namespace Forklift
 
 		void RunClient()
 		{
+			WriteLine("Number of notifications stored in the local database: {0}", Database.Notifications.Count);
+
 			while (Running)
 			{
-				ProcessConnection();
+				try
+				{
+					ProcessConnection();
+				}
+				catch (NRPCException exception)
+				{
+					if (Running)
+					{
+						WriteLine("An RPC exception occurred: {0}", exception.Message);
+						Stream.Close();
+						Client.Close();
+						WriteLine("Reconnecting in {0} ms", Configuration.ReconnectDelay);
+						Thread.Sleep(Configuration.ReconnectDelay);
+					}
+					else
+						return;
+				}
 			}
 		}
 
 		void ProcessConnection()
 		{
+			WriteLine("Connecting to {0}:{1}", Configuration.Server.Host, Configuration.Server.Port);
 			Client = new TcpClient(Configuration.Server.Host, Configuration.Server.Port);
 			Stream = new SslStream(Client.GetStream(), false);
 			X509Certificate certificate = new X509Certificate(Configuration.ClientCertificate);
 			X509CertificateCollection collection = new X509CertificateCollection();
 			collection.Add(certificate);
 			Stream.AuthenticateAsClient(Configuration.Server.CommonName, collection, SslProtocols.Ssl3, false);
+
+			WriteLine("Connected to the server");
 
 			ProtocolHandler = new NRPCProtocol(Stream, this, this);
 			ProtocolHandler.GetNotificationCount(GetNotificationCountCallback);
@@ -199,7 +225,7 @@ namespace Forklift
 
 		public void WriteLine(string message, params object[] arguments)
 		{
-			Console.WriteLine(message, arguments);
+			MainWindow.WriteLine(message, arguments);
 		}
 	}
 }
