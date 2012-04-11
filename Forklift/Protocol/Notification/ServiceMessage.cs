@@ -1,16 +1,13 @@
-﻿namespace Forklift
+﻿using Newtonsoft.Json;
+
+namespace Forklift
 {
 	public class ServiceMessage : Notification
 	{
-		public readonly string Severity;
-		public readonly string Message;
+		[JsonProperty("severity")]
+		public string Severity;
 
-		public ServiceMessage(NotificationData notificationData)
-			: base(notificationData)
-		{
-			var content = notificationData.Content;
-			Severity = (string)content["severity"];
-			Message = (string)content["message"];
-		}
+		[JsonProperty("message")]
+		public string Message;
 	}
 }

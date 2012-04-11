@@ -51,7 +51,7 @@ namespace Forklift
 			if (bytesRead == 0)
 				throw new NRPCException("The connection has been closed");
 
-			string input = Encoding.UTF8.GetString(ByteBuffer);
+			string input = Encoding.UTF8.GetString(ByteBuffer, 0, bytesRead);
 			Buffer += input;
 		}
 
@@ -93,10 +93,17 @@ namespace Forklift
 			throw new NRPCException("This feature has not been implemented yet");
 		}
 
-		Type DeserialiseObject<Type>(object input)
+		DeserialisedType DeserialiseObject<DeserialisedType>(object input)
 		{
 			JsonSerializer serialiser = new JsonSerializer();
-			Type output = (Type)serialiser.Deserialize<Type>(new JTokenReader((JObject)input));
+			DeserialisedType output = (DeserialisedType)serialiser.Deserialize<DeserialisedType>(new JTokenReader((JObject)input));
+			return output;
+		}
+
+		DeserialisedType DeserialiseNotification<DeserialisedType>(NotificationData baseNotification) where DeserialisedType : Notification
+		{
+			DeserialisedType output = DeserialiseObject<DeserialisedType>(baseNotification.Content);
+			output.Time = baseNotification.Time;
 			return output;
 		}
 
@@ -106,30 +113,30 @@ namespace Forklift
 			Unit unit = JsonConvert.DeserializeObject<Unit>(unitString);
 			if (unit.Type == "notification")
 			{
-				NotificationData baseNotification = new NotificationData((Dictionary<string, object>)unit.Data);
+				NotificationData baseNotification = DeserialiseObject<NotificationData>(unit.Data);
 				if (baseNotification.Type == "queued")
 				{
-					QueuedNotification notification = new QueuedNotification(baseNotification);
+					QueuedNotification notification = DeserialiseNotification<QueuedNotification>(baseNotification);
 					NotificationHandler.HandleQueuedNotification(notification);
 				}
 				else if (baseNotification.Type == "downloaded")
 				{
-					DownloadedNotification notification = new DownloadedNotification(baseNotification);
+					DownloadedNotification notification = DeserialiseNotification<DownloadedNotification>(baseNotification);
 					NotificationHandler.HandleDownloadedNotification(notification);
 				}
 				else if (baseNotification.Type == "downloadError")
 				{
-					DownloadError notification = new DownloadError(baseNotification);
+					DownloadError notification = DeserialiseNotification<DownloadError>(baseNotification);
 					NotificationHandler.HandleDownloadError(notification);
 				}
 				else if (baseNotification.Type == "downloadDeleted")
 				{
-					DownloadDeletedNotification notification = new DownloadDeletedNotification(baseNotification);
+					DownloadDeletedNotification notification = DeserialiseNotification<DownloadDeletedNotification>(baseNotification);
 					NotificationHandler.HandleDownloadDeletedNotification(notification);
 				}
 				else if (baseNotification.Type == "serviceMessage")
 				{
-					ServiceMessage notification = new ServiceMessage(baseNotification);
+					ServiceMessage notification = DeserialiseNotification<ServiceMessage>(baseNotification);
 					NotificationHandler.HandleServiceMessage(notification);
 				}
 				else
@@ -193,7 +200,7 @@ namespace Forklift
 			PerformRPC(callback, GetOldNotificationsMethod, firstIndex, lastIndex);
 		}
 
-		public void GenerateNotification(RPCResultCallback callback, string type, string content)
+		public void GenerateNotification(RPCResultCallback callback, string type, object content)
 		{
 			PerformRPC(callback, GenerateNotificationMethod, type, content);
 		}

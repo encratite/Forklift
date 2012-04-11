@@ -1,14 +1,11 @@
 ﻿using System;
+using Newtonsoft.Json;
 
 namespace Forklift
 {
 	public abstract class Notification
 	{
-		public readonly DateTime Time;
-
-		public Notification(NotificationData notificationData)
-		{
-			Time = notificationData.Time;
-		}
+		[JsonIgnore]
+		public DateTime Time;
 	}
 }

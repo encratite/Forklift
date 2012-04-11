@@ -5,6 +5,8 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
+using Newtonsoft.Json;
+
 namespace Forklift
 {
 	class WarehouseClient : INotificationHandler
@@ -72,6 +74,10 @@ namespace Forklift
 
 			NRPCProtocol protocolHandler = new NRPCProtocol(Stream, this);
 			protocolHandler.GetNotificationCount(GetNotificationCountCallback);
+			ServiceMessage message = new ServiceMessage();
+			message.Severity = "error";
+			message.Message = "This is a test.";
+			protocolHandler.GenerateNotification(GenerateNotificationCallback, "serviceMessage", message);
 			while (Running)
 				protocolHandler.ProcessUnit();
 		}
@@ -82,24 +88,33 @@ namespace Forklift
 			Console.WriteLine("Count: {0}", count);
 		}
 
+		public void GenerateNotificationCallback(object[] arguments)
+		{
+		}
+
 		public void HandleQueuedNotification(QueuedNotification notification)
 		{
+			Console.WriteLine("[{0}] Queued: {1}", notification.Time, notification.ReleaseData);
 		}
 
 		public void HandleDownloadedNotification(DownloadedNotification notification)
 		{
+			Console.WriteLine("[{0}] Downloaded: {1}", notification.Time, notification.ReleaseData);
 		}
 
 		public void HandleDownloadError(DownloadError notification)
 		{
+			Console.WriteLine("[{0}] Download error for release \"{1}\": {2}", notification.Time, notification.Release, notification.Message);
 		}
 
 		public void HandleDownloadDeletedNotification(DownloadDeletedNotification notification)
 		{
+			Console.WriteLine("[{0}] Removed release \"{1}\": {2}", notification.Time, notification.Release, notification.Reason);
 		}
 
 		public void HandleServiceMessage(ServiceMessage notification)
 		{
+			Console.WriteLine("[{0}] Service message of level \"{1}\": {2}", notification.Time, notification.Severity, notification.Message);
 		}
 
 		public void HandlePing()
