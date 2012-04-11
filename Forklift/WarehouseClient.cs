@@ -80,6 +80,7 @@ namespace Forklift
 			Database = Serialiser.Load();
 			foreach (var notification in Database.Notifications)
 				notification.Initialise(false);
+			Database.Notifications.Sort(CompareNotifications);
 		}
 
 		void SaveDatabase()
@@ -98,6 +99,7 @@ namespace Forklift
 			lock (Database)
 			{
 				Database.Notifications.Add(notification);
+				Database.Notifications.Sort(CompareNotifications);
 				Database.NotificationCount++;
 			}
 			SaveDatabase();
@@ -190,13 +192,18 @@ namespace Forklift
 			else
 				PlayNotificationSound();
 			//Make sure that the notifications are in the right order, commencing with the oldest one
-			newNotifications.Sort((x, y) => x.Time.CompareTo(y.Time));
 			lock (Database)
 			{
 				Database.Notifications.AddRange(newNotifications);
+				Database.Notifications.Sort(CompareNotifications);
 				Database.NotificationCount = ServerNotificationCount;
 			}
 			SaveDatabase();
+		}
+
+		int CompareNotifications(Notification x, Notification y)
+		{
+			return - x.Time.CompareTo(y.Time);
 		}
 
 		void PlaySound(UnmanagedMemoryStream resource)
