@@ -77,7 +77,7 @@ namespace Forklift
 			Serialiser = new Nil.Serialiser<Database>(Configuration.Database);
 			Database = Serialiser.Load();
 			foreach (var notification in Database.Notifications)
-				notification.Initialise();
+				notification.Initialise(false);
 		}
 
 		void SaveDatabase()

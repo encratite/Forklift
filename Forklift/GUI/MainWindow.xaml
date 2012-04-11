@@ -11,30 +11,15 @@
 		</Grid.RowDefinitions>
 		<DataGrid Background="{x:Null}" ItemsSource="{Binding Notifications}" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" BorderBrush="{x:Null}" Grid.Row="0" CanUserReorderColumns="False" CanUserSortColumns="False" SelectionMode="Single" IsReadOnly="True">
 			<DataGrid.Resources>
-				<ResourceDictionary>
-					<Style x:Key="{x:Type DataGridCell}" TargetType="{x:Type DataGridCell}">
-						<Style.Triggers>
-							<Trigger Property="IsSelected" Value="True">
-								<Setter Property="Background" Value="White" />
-								<Setter Property="Foreground" Value="Black" />
-								<Setter Property="BorderBrush" Value="{x:Null}" />
-							</Trigger>
-						</Style.Triggers>
-					</Style>
-					<Style TargetType="{x:Type DataGridRow}">
-						<Style.Triggers>
-							<Trigger Property="IsSelected" Value="True">
-								<Setter Property="Background" Value="White" />
-								<Setter Property="Foreground" Value="Black" />
-								<Setter Property="BorderBrush" Value="{x:Null}" />
-							</Trigger>
-						</Style.Triggers>
-					</Style>
-				</ResourceDictionary>
+				<Style TargetType="{x:Type DataGridRow}">
+					<Style.Setters>
+						<Setter Property="Foreground" Value="{Binding Path=Colour}"></Setter>
+					</Style.Setters>
+				</Style>
 			</DataGrid.Resources>
 			<DataGrid.Columns>
 				<DataGridTextColumn Header="Icon" Width="50"/>
-				<DataGridTextColumn Header="Event" Binding="{Binding Description}" Width="*"/>
+				<DataGridTextColumn Header="Event" Binding="{Binding Description}" Width="*" />
 				<DataGridTextColumn Header="Time" Binding="{Binding TimeString}" Width="130"/>
 			</DataGrid.Columns>
 		</DataGrid>

@@ -57,6 +57,25 @@ namespace Forklift
 			}
 		}
 
+		[XmlIgnore]
+		[JsonIgnore]
+		string colour;
+
+		[JsonIgnore]
+		public string Colour
+		{
+			get
+			{
+				return colour;
+			}
+
+			set
+			{
+				colour = value;
+				Notify("Colour");
+			}
+		}
+
 		void Notify(string propertyName)
 		{
 			if (PropertyChanged != null)
@@ -65,9 +84,10 @@ namespace Forklift
 			}
 		}
 
-		public void Initialise()
+		public void Initialise(bool isNew)
 		{
 			Description = GetDescription();
+			Colour = isNew ? "Green" : "Black";
 			timeString = Time.ToStandardString();
 		}
 

@@ -138,7 +138,7 @@ namespace Forklift
 		public static Notification GetNotification(object input)
 		{
 			Notification output = GetUninitialisedNotification(input);
-			output.Initialise();
+			output.Initialise(true);
 			return output;
 		}
 

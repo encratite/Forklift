@@ -63,6 +63,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Database.cs" />
+    <Compile Include="GUI\DescriptionConverter.cs" />
     <Compile Include="GUI\MainWindowDataContext.cs" />
     <Compile Include="Interface\IOutputHandler.cs" />
     <Compile Include="NRPCException.cs" />
