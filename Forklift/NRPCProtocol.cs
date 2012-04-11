@@ -118,7 +118,7 @@ namespace Forklift
 			return output;
 		}
 
-		public static Notification GetNotification(object input)
+		static Notification GetUninitialisedNotification(object input)
 		{
 			NotificationData baseNotification = DeserialiseObject<NotificationData>(input);
 			if (baseNotification.Type == "queued")
@@ -133,6 +133,13 @@ namespace Forklift
 				return DeserialiseNotification<ServiceMessage>(baseNotification);
 			else
 				throw new NRPCException("Encountered an unknown notification type string");
+		}
+
+		public static Notification GetNotification(object input)
+		{
+			Notification output = GetUninitialisedNotification(input);
+			output.Initialise();
+			return output;
 		}
 
 		public void ProcessUnit()

@@ -76,6 +76,8 @@ namespace Forklift
 		{
 			Serialiser = new Nil.Serialiser<Database>(Configuration.Database);
 			Database = Serialiser.Load();
+			foreach (var notification in Database.Notifications)
+				notification.Initialise();
 		}
 
 		void SaveDatabase()
@@ -83,10 +85,7 @@ namespace Forklift
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
 			lock (Database)
-			{
-				Database.Notifications.Sort((x, y) => x.Time.CompareTo(y.Time));
 				Serialiser.Store(Database);
-			}
 			stopwatch.Stop();
 			WriteLine("Saved {0} notifications in {1} ms", Database.Notifications.Count, stopwatch.ElapsedMilliseconds);
 		}
@@ -167,20 +166,26 @@ namespace Forklift
 			NotificationRetrievalTimer.Stop();
 			JArray notificationObjects = (JArray)arguments[0];
 			WriteLine("Downloaded {0} new notification(s) in {1} ms", notificationObjects.Count, NotificationRetrievalTimer.ElapsedMilliseconds);
+			List<Notification> newNotifications = new List<Notification>();
 			foreach (var notificationObject in notificationObjects)
 			{
 				try
 				{
 					Notification notification = NRPCProtocol.GetNotification(notificationObject);
-					Database.Notifications.Add(notification);
+					newNotifications.Add(notification);
 				}
 				catch (NRPCException)
 				{
-					//This is probably an old test exception
+					//This is probably an old test exception, ignore it
 				}
 			}
+			//Make sure that the notifications are in the right order, commencing with the oldest one
+			newNotifications.Sort((x, y) => x.Time.CompareTo(y.Time));
 			lock (Database)
+			{
+				Database.Notifications.AddRange(newNotifications);
 				Database.NotificationCount = ServerNotificationCount;
+			}
 			SaveDatabase();
 		}
 
@@ -226,6 +231,11 @@ namespace Forklift
 		public void WriteLine(string message, params object[] arguments)
 		{
 			MainWindow.WriteLine(message, arguments);
+		}
+
+		public Database GetDatabase()
+		{
+			return Database;
 		}
 	}
 }

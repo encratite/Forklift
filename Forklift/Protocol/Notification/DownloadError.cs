@@ -9,5 +9,10 @@ namespace Forklift
 
 		[JsonProperty("message")]
 		public string Message;
+
+		protected override string GetDescription()
+		{
+			return string.Format("Download error in release \"{0}\": {1}", Release, Message);
+		}
 	}
 }

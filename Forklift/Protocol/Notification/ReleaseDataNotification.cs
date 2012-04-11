@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace Forklift
 {
-	public class ReleaseDataNotification : Notification
+	public abstract class ReleaseDataNotification : Notification
 	{
 		[JsonProperty("site")]
 		public string Site;

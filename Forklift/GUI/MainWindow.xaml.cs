@@ -28,6 +28,8 @@ namespace Forklift
 
 			IsFirstLine = true;
 
+			DataContext = new MainWindowDataContext(WarehouseClient.GetDatabase());
+
 			InitializeComponent();
 
 			int revision = Assembly.GetEntryAssembly().GetName().Version.Revision;

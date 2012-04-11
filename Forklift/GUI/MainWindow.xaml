@@ -2,14 +2,20 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="Forklift.MainWindow"
-        Title="Forklift" Height="344" Width="629" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Closing="WindowClosing">
+        Title="Forklift" Height="362" Width="851" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" Closing="WindowClosing">
 	<Grid>
 		<Grid.RowDefinitions>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="90"/>
 		</Grid.RowDefinitions>
-		<DataGrid Background="{x:Null}" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" BorderBrush="{x:Null}" Grid.Row="0" />
+		<DataGrid Background="{x:Null}" ItemsSource="{Binding Notifications}" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" BorderBrush="{x:Null}" Grid.Row="0">
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="Icon" Width="50"/>
+				<DataGridTextColumn Header="Event" Binding="{Binding Description}" Width="*"/>
+				<DataGridTextColumn Header="Time" Binding="{Binding TimeString}" Width="130"/>
+			</DataGrid.Columns>
+		</DataGrid>
 		<GridSplitter Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Top" ResizeBehavior="PreviousAndNext" Grid.Row="1" />
 		<TextBox x:Name="OutputTextBox" HorizontalAlignment="Stretch" TextWrapping="Wrap" Text="" d:LayoutOverrides="GridBox" Grid.Row="2" VerticalScrollBarVisibility="Visible" />
 	</Grid>
