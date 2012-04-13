@@ -114,7 +114,7 @@ namespace Forklift
 		{
 			Description = GetDescription();
 			TimeString = Time.ToStandardString();
-			Colour = isNew ? "Green" : "Black";
+			Colour = isNew ? "#FF1ABF22" : "Black";
 			ImageString = GetImageString();
 		}
 

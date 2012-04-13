@@ -90,7 +90,7 @@ namespace Forklift
 			lock (Database)
 				Serialiser.Store(Database);
 			stopwatch.Stop();
-			WriteLine("Saved {0} notifications in {1} ms", Database.Notifications.Count, stopwatch.ElapsedMilliseconds);
+			//WriteLine("Saved {0} notifications in {1} ms", Database.Notifications.Count, stopwatch.ElapsedMilliseconds);
 		}
 
 		void NewNotification(Notification notification)
