@@ -73,6 +73,8 @@ namespace Forklift
 					scrollViewer.ScrollToTop();
 				}
 			};
+
+			NotificationGrid.Dispatcher.Invoke(action);
 		}
 	}
 }
