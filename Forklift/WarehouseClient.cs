@@ -57,6 +57,7 @@ namespace Forklift
 			Running = true;
 
 			MainWindow.ShowDialog();
+			MainWindow.ScrollToTop();
 		}
 
 		public void Terminate()
@@ -95,7 +96,6 @@ namespace Forklift
 
 		void NewNotification(Notification notification)
 		{
-			PlayNotificationSound(notification);
 			lock (Database)
 			{
 				Database.Notifications.Add(notification);
@@ -103,6 +103,8 @@ namespace Forklift
 				Database.NotificationCount++;
 			}
 			SaveDatabase();
+			PlayNotificationSound(notification);
+			MainWindow.ScrollToTop();
 		}
 
 		void RunClient()
@@ -187,10 +189,6 @@ namespace Forklift
 					//This is probably an old test exception, ignore it
 				}
 			}
-			if (errorOccurred)
-				PlayErrorSound();
-			else
-				PlayNotificationSound();
 			//Make sure that the notifications are in the right order, commencing with the oldest one
 			lock (Database)
 			{
@@ -199,6 +197,11 @@ namespace Forklift
 				Database.NotificationCount = ServerNotificationCount;
 			}
 			SaveDatabase();
+			if (errorOccurred)
+				PlayErrorSound();
+			else
+				PlayNotificationSound();
+			MainWindow.ScrollToTop();
 		}
 
 		int CompareNotifications(Notification x, Notification y)

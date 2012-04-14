@@ -61,5 +61,18 @@ namespace Forklift
 
 			OutputTextBox.Dispatcher.Invoke(action);
 		}
+
+		public void ScrollToTop()
+		{
+			var action = (Action)delegate
+			{
+				var treeChild = (Decorator)VisualTreeHelper.GetChild(NotificationGrid, 0);
+				if (treeChild != null)
+				{
+					var scrollViewer = (ScrollViewer)treeChild.Child;
+					scrollViewer.ScrollToTop();
+				}
+			};
+		}
 	}
 }

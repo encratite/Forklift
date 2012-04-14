@@ -9,7 +9,7 @@
 			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="90"/>
 		</Grid.RowDefinitions>
-		<DataGrid Background="{x:Null}" ItemsSource="{Binding Notifications}" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" BorderBrush="{x:Null}" Grid.Row="0" CanUserReorderColumns="False" CanUserSortColumns="False" SelectionMode="Single" IsReadOnly="True">
+		<DataGrid x:Name="NotificationGrid" Background="{x:Null}" ItemsSource="{Binding Notifications}" AutoGenerateColumns="False" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" BorderBrush="{x:Null}" Grid.Row="0" CanUserReorderColumns="False" CanUserSortColumns="False" SelectionMode="Single" IsReadOnly="True">
 			<DataGrid.Resources>
 				<Style TargetType="{x:Type DataGridRow}">
 					<Style.Setters>
