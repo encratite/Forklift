@@ -117,20 +117,35 @@ namespace Forklift
 				{
 					ProcessConnection();
 				}
+				catch (SocketException exception)
+				{
+					if (Running)
+					{
+						WriteLine("A connection error occurred: {0}", exception.Message);
+						Reconnect();
+					}
+					else
+						return;
+				}
 				catch (NRPCException exception)
 				{
 					if (Running)
 					{
 						WriteLine("An RPC exception occurred: {0}", exception.Message);
-						Stream.Close();
-						Client.Close();
-						WriteLine("Reconnecting in {0} ms", Configuration.ReconnectDelay);
-						Thread.Sleep(Configuration.ReconnectDelay);
+						Reconnect();
 					}
 					else
 						return;
 				}
 			}
+		}
+
+		void Reconnect()
+		{
+			Stream.Close();
+			Client.Close();
+			WriteLine("Reconnecting in {0} ms", Configuration.ReconnectDelay);
+			Thread.Sleep(Configuration.ReconnectDelay);
 		}
 
 		void ProcessConnection()
