@@ -188,7 +188,7 @@ namespace Forklift
 				lock (Database)
 					Database.NotificationCount = ServerNotificationCount;
 				NotificationRetrievalTimer.Start();
-				ProtocolHandler.GetNotifications(GetNotificationsCallback, 0, newNotificationCount - 1);
+				ProtocolHandler.GetNotifications(GetNotificationsCallback, 0, newNotificationCount);
 			}
 			else
 				WriteLine("There are no new notifications available on the server");
