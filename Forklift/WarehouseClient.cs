@@ -34,6 +34,8 @@ namespace Forklift
 
 		MainWindow MainWindow;
 
+		AutoResetEvent TerminationEvent;
+
 		public WarehouseClient(Configuration configuration)
 		{
 			Configuration = configuration;
@@ -41,6 +43,8 @@ namespace Forklift
 			Running = false;
 
 			NotificationRetrievalTimer = new Stopwatch();
+
+			TerminationEvent = new AutoResetEvent(false);
 
 			LoadDatabase();
 
@@ -67,8 +71,8 @@ namespace Forklift
 				if (Running)
 				{
 					Running = false;
-					Stream.Close();
-					Client.Close();
+					TerminationEvent.Set();
+					Close();
 					ClientThread.Join();
 					ClientThread = null;
 				}
@@ -140,12 +144,19 @@ namespace Forklift
 			}
 		}
 
+		void Close()
+		{
+			if (Stream != null)
+				Stream.Close();
+			if (Client != null)
+				Client.Close();
+		}
+
 		void Reconnect()
 		{
-			Stream.Close();
-			Client.Close();
+			Close();
 			WriteLine("Reconnecting in {0} ms", Configuration.ReconnectDelay);
-			Thread.Sleep(Configuration.ReconnectDelay);
+			TerminationEvent.WaitOne(Configuration.ReconnectDelay);
 		}
 
 		void ProcessConnection()
