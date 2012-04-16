@@ -62,7 +62,7 @@ namespace Forklift
 			OutputTextBox.Dispatcher.Invoke(action);
 		}
 
-		public void ScrollToTop()
+		void ScrollToTop()
 		{
 			var action = (Action)delegate
 			{
@@ -75,6 +75,12 @@ namespace Forklift
 			};
 
 			NotificationGrid.Dispatcher.Invoke(action);
+		}
+
+		public void NewNotification()
+		{
+			ScrollToTop();
+			NotificationGrid.Items.Refresh();
 		}
 	}
 }

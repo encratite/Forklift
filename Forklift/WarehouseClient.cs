@@ -61,7 +61,7 @@ namespace Forklift
 			Running = true;
 
 			MainWindow.ShowDialog();
-			MainWindow.ScrollToTop();
+			MainWindow.NewNotification();
 		}
 
 		public void Terminate()
@@ -108,7 +108,7 @@ namespace Forklift
 			}
 			SaveDatabase();
 			PlayNotificationSound(notification);
-			MainWindow.ScrollToTop();
+			MainWindow.NewNotification();
 		}
 
 		void RunClient()
@@ -227,7 +227,7 @@ namespace Forklift
 				PlayErrorSound();
 			else
 				PlayNotificationSound();
-			MainWindow.ScrollToTop();
+			MainWindow.NewNotification();
 		}
 
 		int CompareNotifications(Notification x, Notification y)
