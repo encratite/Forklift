@@ -43,9 +43,6 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\References\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="Nil">
-      <HintPath>..\References\Nil.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -135,6 +132,12 @@
     <Resource Include="Resource\Image\ServiceMessage.png" />
     <Content Include="Resource\Sound\Error.wav" />
     <Content Include="Resource\Sound\Notification.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Nil\Nil\Nil.csproj">
+      <Project>{1334470a-3e7b-4a4f-a86a-7d6e908b89a7}</Project>
+      <Name>Nil</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
