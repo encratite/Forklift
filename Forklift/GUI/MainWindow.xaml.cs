@@ -1,18 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Reflection;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace Forklift
 {
@@ -31,9 +21,6 @@ namespace Forklift
 			DataContext = new MainWindowDataContext(WarehouseClient.GetDatabase());
 
 			InitializeComponent();
-
-			int revision = Assembly.GetEntryAssembly().GetName().Version.Revision;
-			Title = string.Format("Forklift r{0}", revision);
 		}
 
 		void WindowClosing(object sender, CancelEventArgs arguments)

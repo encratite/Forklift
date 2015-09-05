@@ -226,7 +226,6 @@ namespace Forklift
 			lock (_Database)
 				_Serialiser.Store(_Database);
 			stopwatch.Stop();
-			//WriteLine("Saved {0} notifications in {1} ms", Database.Notifications.Count, stopwatch.ElapsedMilliseconds);
 		}
 
 		private void NewNotification(Notification notification)
