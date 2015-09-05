@@ -25,10 +25,5 @@ namespace Forklift
 		{
 			return _Epoch.AddSeconds(timestamp);
 		}
-
-		public static long UnixTime()
-		{
-			return DateTime.UtcNow.ToUnixTime();
-		}
 	}
 }

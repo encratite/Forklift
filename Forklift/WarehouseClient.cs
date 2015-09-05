@@ -16,6 +16,7 @@ namespace Forklift
 	{
 		private Configuration _Configuration;
 		private Thread _ClientThread;
+		private Thread _PingThread;
 		private bool _Running;
 
 		private TcpClient _Client;
@@ -38,6 +39,7 @@ namespace Forklift
 		{
 			_Configuration = configuration;
 			_ClientThread = null;
+			_PingThread = null;
 			_Running = false;
 
 			_NotificationRetrievalTimer = new Stopwatch();
@@ -73,11 +75,59 @@ namespace Forklift
 					Close();
 					_ClientThread.Join();
 					_ClientThread = null;
+					_PingThread.Abort();
+					_PingThread.Join();
+					_PingThread= null;
 				}
 			}
 		}
 
-		public void GetNotificationCountCallback(object[] arguments)
+		public void HandleQueuedNotification(QueuedNotification notification)
+		{
+			NewNotification(notification);
+		}
+
+		public void HandleDownloadedNotification(DownloadedNotification notification)
+		{
+			NewNotification(notification);
+		}
+
+		public void HandleDownloadError(DownloadError notification)
+		{
+			NewNotification(notification);
+		}
+
+		public void HandleDownloadDeletedNotification(DownloadDeletedNotification notification)
+		{
+			NewNotification(notification);
+		}
+
+		public void HandleServiceMessage(ServiceMessage notification)
+		{
+			NewNotification(notification);
+		}
+
+		public void HandlePing()
+		{
+		}
+
+		public void HandleError(string message)
+		{
+			WriteLine("Protocol error: {0}", message);
+			PlayErrorSound();
+		}
+
+		public void WriteLine(string message, params object[] arguments)
+		{
+			_MainWindow.WriteLine(message, arguments);
+		}
+
+		public Database GetDatabase()
+		{
+			return _Database;
+		}
+
+		private void GetNotificationCountCallback(object[] arguments)
 		{
 			_ServerNotificationCount = (long)arguments[0];
 			long newNotificationCount = _ServerNotificationCount - _Database.NotificationCount;
@@ -94,7 +144,11 @@ namespace Forklift
 				WriteLine("There are no new notifications available on the server");
 		}
 
-		public void GetNotificationsCallback(object[] arguments)
+		private void GetNotificationCountPingCallback(object[] arguments)
+		{
+		}
+
+		private void GetNotificationsCallback(object[] arguments)
 		{
 			_NotificationRetrievalTimer.Stop();
 			JArray notificationObjects = (JArray)arguments[0];
@@ -163,51 +217,6 @@ namespace Forklift
 					PlayErrorSound();
 					break;
 			}
-		}
-
-		public void HandleQueuedNotification(QueuedNotification notification)
-		{
-			NewNotification(notification);
-		}
-
-		public void HandleDownloadedNotification(DownloadedNotification notification)
-		{
-			NewNotification(notification);
-		}
-
-		public void HandleDownloadError(DownloadError notification)
-		{
-			NewNotification(notification);
-		}
-
-		public void HandleDownloadDeletedNotification(DownloadDeletedNotification notification)
-		{
-			NewNotification(notification);
-		}
-
-		public void HandleServiceMessage(ServiceMessage notification)
-		{
-			NewNotification(notification);
-		}
-
-		public void HandlePing()
-		{
-		}
-
-		public void HandleError(string message)
-		{
-			WriteLine("Protocol error: {0}", message);
-			PlayErrorSound();
-		}
-
-		public void WriteLine(string message, params object[] arguments)
-		{
-			_MainWindow.WriteLine(message, arguments);
-		}
-
-		public Database GetDatabase()
-		{
-			return _Database;
 		}
 
 		private void LoadDatabase()
@@ -303,8 +312,29 @@ namespace Forklift
 
 			_ProtocolHandler = new NRPCProtocol(_Stream, this, this);
 			_ProtocolHandler.GetNotificationCount(GetNotificationCountCallback);
+			if (_PingThread == null)
+			{
+				_PingThread = new Thread(PingServer);
+				_PingThread.Start();
+            }
 			while (_Running)
 				_ProtocolHandler.ProcessUnit();
+		}
+
+		private void PingServer()
+		{
+			while (_Running)
+			{
+				try
+				{
+					_ProtocolHandler.GetNotificationCount(GetNotificationCountPingCallback);
+				}
+				catch
+				{
+				}
+				var timeSpan = TimeSpan.FromSeconds(60);
+				Thread.Sleep(timeSpan);
+			}
 		}
 	}
 }
