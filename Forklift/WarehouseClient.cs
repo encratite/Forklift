@@ -8,187 +8,87 @@ using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
-
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Forklift
 {
 	public class WarehouseClient : INotificationHandler, IOutputHandler
 	{
-		Configuration Configuration;
-		Thread ClientThread;
-		bool Running;
+		private Configuration _Configuration;
+		private Thread _ClientThread;
+		private bool _Running;
 
-		TcpClient Client;
-		SslStream Stream;
+		private TcpClient _Client;
+		private SslStream _Stream;
 
-		NRPCProtocol ProtocolHandler;
+		private NRPCProtocol _ProtocolHandler;
 
-		Nil.Serialiser<Database> Serialiser;
-		Database Database;
+		private Nil.Serialiser<Database> _Serialiser;
+		private Database _Database;
 
-		Stopwatch NotificationRetrievalTimer;
+		private Stopwatch _NotificationRetrievalTimer;
 
-		long ServerNotificationCount;
+		private long _ServerNotificationCount;
 
-		MainWindow MainWindow;
+		private MainWindow _MainWindow;
 
-		AutoResetEvent TerminationEvent;
+		private AutoResetEvent _TerminationEvent;
 
 		public WarehouseClient(Configuration configuration)
 		{
-			Configuration = configuration;
-			ClientThread = null;
-			Running = false;
+			_Configuration = configuration;
+			_ClientThread = null;
+			_Running = false;
 
-			NotificationRetrievalTimer = new Stopwatch();
+			_NotificationRetrievalTimer = new Stopwatch();
 
-			TerminationEvent = new AutoResetEvent(false);
+			_TerminationEvent = new AutoResetEvent(false);
 
 			LoadDatabase();
 
-			MainWindow = new MainWindow(this);
+			_MainWindow = new MainWindow(this);
 		}
 
 		public void Run()
 		{
-			if (Running)
+			if (_Running)
 				throw new Exception("The client is already running");
-			ClientThread = new Thread(RunClient);
-			ClientThread.Name = "Warehouse Client Thread";
-			ClientThread.Start();
-			Running = true;
+			_ClientThread = new Thread(RunClient);
+			_ClientThread.Name = "Warehouse Client Thread";
+			_ClientThread.Start();
+			_Running = true;
 
-			MainWindow.ShowDialog();
-			MainWindow.NewNotification();
+			_MainWindow.ShowDialog();
+			_MainWindow.NewNotification();
 		}
 
 		public void Terminate()
 		{
-			lock (Database)
+			lock (_Database)
 			{
-				if (Running)
+				if (_Running)
 				{
-					Running = false;
-					TerminationEvent.Set();
+					_Running = false;
+					_TerminationEvent.Set();
 					Close();
-					ClientThread.Join();
-					ClientThread = null;
+					_ClientThread.Join();
+					_ClientThread = null;
 				}
 			}
-		}
-
-		void LoadDatabase()
-		{
-			Serialiser = new Nil.Serialiser<Database>(Configuration.Database);
-			Database = Serialiser.Load();
-			foreach (var notification in Database.Notifications)
-				notification.Initialise(false);
-			Database.Notifications.Sort(CompareNotifications);
-		}
-
-		void SaveDatabase()
-		{
-			Stopwatch stopwatch = new Stopwatch();
-			stopwatch.Start();
-			lock (Database)
-				Serialiser.Store(Database);
-			stopwatch.Stop();
-			//WriteLine("Saved {0} notifications in {1} ms", Database.Notifications.Count, stopwatch.ElapsedMilliseconds);
-		}
-
-		void NewNotification(Notification notification)
-		{
-			lock (Database)
-			{
-				Database.Notifications.Add(notification);
-				Database.Notifications.Sort(CompareNotifications);
-				Database.NotificationCount++;
-			}
-			SaveDatabase();
-			PlayNotificationSound(notification);
-			MainWindow.NewNotification();
-		}
-
-		void RunClient()
-		{
-			WriteLine("Number of notifications stored in the local database: {0}", Database.Notifications.Count);
-
-			while (Running)
-			{
-				try
-				{
-					ProcessConnection();
-				}
-				catch (SocketException exception)
-				{
-					if (Running)
-					{
-						WriteLine("A connection error occurred: {0}", exception.Message);
-						Reconnect();
-					}
-					else
-						return;
-				}
-				catch (NRPCException exception)
-				{
-					if (Running)
-					{
-						WriteLine("An RPC exception occurred: {0}", exception.Message);
-						Reconnect();
-					}
-					else
-						return;
-				}
-			}
-		}
-
-		void Close()
-		{
-			if (Stream != null)
-				Stream.Close();
-			if (Client != null)
-				Client.Close();
-		}
-
-		void Reconnect()
-		{
-			Close();
-			WriteLine("Reconnecting in {0} ms", Configuration.ReconnectDelay);
-			TerminationEvent.WaitOne(Configuration.ReconnectDelay);
-		}
-
-		void ProcessConnection()
-		{
-			WriteLine("Connecting to {0}:{1}", Configuration.Server.Host, Configuration.Server.Port);
-			Client = new TcpClient(Configuration.Server.Host, Configuration.Server.Port);
-			Stream = new SslStream(Client.GetStream(), false);
-			X509Certificate certificate = new X509Certificate(Configuration.ClientCertificate);
-			X509CertificateCollection collection = new X509CertificateCollection();
-			collection.Add(certificate);
-			Stream.AuthenticateAsClient(Configuration.Server.CommonName, collection, SslProtocols.Ssl3, false);
-
-			WriteLine("Connected to the server");
-
-			ProtocolHandler = new NRPCProtocol(Stream, this, this);
-			ProtocolHandler.GetNotificationCount(GetNotificationCountCallback);
-			while (Running)
-				ProtocolHandler.ProcessUnit();
 		}
 
 		public void GetNotificationCountCallback(object[] arguments)
 		{
-			ServerNotificationCount = (long)arguments[0];
-			long newNotificationCount = ServerNotificationCount - Database.NotificationCount;
-			WriteLine("Number of notifications stored on the server: {0}", ServerNotificationCount);
+			_ServerNotificationCount = (long)arguments[0];
+			long newNotificationCount = _ServerNotificationCount - _Database.NotificationCount;
+			WriteLine("Number of notifications stored on the server: {0}", _ServerNotificationCount);
 			if (newNotificationCount > 0)
 			{
 				WriteLine("Number of new notifications available on the server: {0}", newNotificationCount);
-				lock (Database)
-					Database.NotificationCount = ServerNotificationCount;
-				NotificationRetrievalTimer.Start();
-				ProtocolHandler.GetNotifications(GetNotificationsCallback, 0, newNotificationCount);
+				lock (_Database)
+					_Database.NotificationCount = _ServerNotificationCount;
+				_NotificationRetrievalTimer.Start();
+				_ProtocolHandler.GetNotifications(GetNotificationsCallback, 0, newNotificationCount);
 			}
 			else
 				WriteLine("There are no new notifications available on the server");
@@ -196,9 +96,9 @@ namespace Forklift
 
 		public void GetNotificationsCallback(object[] arguments)
 		{
-			NotificationRetrievalTimer.Stop();
+			_NotificationRetrievalTimer.Stop();
 			JArray notificationObjects = (JArray)arguments[0];
-			WriteLine("Downloaded {0} new notification(s) in {1} ms", notificationObjects.Count, NotificationRetrievalTimer.ElapsedMilliseconds);
+			WriteLine("Downloaded {0} new notification(s) in {1} ms", notificationObjects.Count, _NotificationRetrievalTimer.ElapsedMilliseconds);
 			List<Notification> newNotifications = new List<Notification>();
 			bool errorOccurred = false;
 			foreach (var notificationObject in notificationObjects)
@@ -216,42 +116,42 @@ namespace Forklift
 				}
 			}
 			//Make sure that the notifications are in the right order, commencing with the oldest one
-			lock (Database)
+			lock (_Database)
 			{
-				Database.Notifications.AddRange(newNotifications);
-				Database.Notifications.Sort(CompareNotifications);
-				Database.NotificationCount = ServerNotificationCount;
+				_Database.Notifications.AddRange(newNotifications);
+				_Database.Notifications.Sort(CompareNotifications);
+				_Database.NotificationCount = _ServerNotificationCount;
 			}
 			SaveDatabase();
 			if (errorOccurred)
 				PlayErrorSound();
 			else
 				PlayNotificationSound();
-			MainWindow.NewNotification();
+			_MainWindow.NewNotification();
 		}
 
-		int CompareNotifications(Notification x, Notification y)
+		private int CompareNotifications(Notification x, Notification y)
 		{
 			return - x.Time.CompareTo(y.Time);
 		}
 
-		void PlaySound(UnmanagedMemoryStream resource)
+		private void PlaySound(UnmanagedMemoryStream resource)
 		{
 			SoundPlayer player = new SoundPlayer(resource);
 			player.Play();
 		}
 
-		void PlayNotificationSound()
+		private void PlayNotificationSound()
 		{
 			PlaySound(Properties.Resources.NotificationSound);
 		}
 
-		void PlayErrorSound()
+		private void PlayErrorSound()
 		{
 			PlaySound(Properties.Resources.ErrorSound);
 		}
 
-		void PlayNotificationSound(Notification notification)
+		private void PlayNotificationSound(Notification notification)
 		{
 			switch (notification.GetNotificationType())
 			{
@@ -302,12 +202,110 @@ namespace Forklift
 
 		public void WriteLine(string message, params object[] arguments)
 		{
-			MainWindow.WriteLine(message, arguments);
+			_MainWindow.WriteLine(message, arguments);
 		}
 
 		public Database GetDatabase()
 		{
-			return Database;
+			return _Database;
+		}
+
+		private void LoadDatabase()
+		{
+			_Serialiser = new Nil.Serialiser<Database>(_Configuration.Database);
+			_Database = _Serialiser.Load();
+			foreach (var notification in _Database.Notifications)
+				notification.Initialise(false);
+			_Database.Notifications.Sort(CompareNotifications);
+		}
+
+		private void SaveDatabase()
+		{
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
+			lock (_Database)
+				_Serialiser.Store(_Database);
+			stopwatch.Stop();
+			//WriteLine("Saved {0} notifications in {1} ms", Database.Notifications.Count, stopwatch.ElapsedMilliseconds);
+		}
+
+		private void NewNotification(Notification notification)
+		{
+			lock (_Database)
+			{
+				_Database.Notifications.Add(notification);
+				_Database.Notifications.Sort(CompareNotifications);
+				_Database.NotificationCount++;
+			}
+			SaveDatabase();
+			PlayNotificationSound(notification);
+			_MainWindow.NewNotification();
+		}
+
+		private void RunClient()
+		{
+			WriteLine("Number of notifications stored in the local database: {0}", _Database.Notifications.Count);
+
+			while (_Running)
+			{
+				try
+				{
+					ProcessConnection();
+				}
+				catch (SocketException exception)
+				{
+					if (_Running)
+					{
+						WriteLine("A connection error occurred: {0}", exception.Message);
+						Reconnect();
+					}
+					else
+						return;
+				}
+				catch (NRPCException exception)
+				{
+					if (_Running)
+					{
+						WriteLine("An RPC exception occurred: {0}", exception.Message);
+						Reconnect();
+					}
+					else
+						return;
+				}
+			}
+		}
+
+		private void Close()
+		{
+			if (_Stream != null)
+				_Stream.Close();
+			if (_Client != null)
+				_Client.Close();
+		}
+
+		private void Reconnect()
+		{
+			Close();
+			WriteLine("Reconnecting in {0} ms", _Configuration.ReconnectDelay);
+			_TerminationEvent.WaitOne(_Configuration.ReconnectDelay);
+		}
+
+		private void ProcessConnection()
+		{
+			WriteLine("Connecting to {0}:{1}", _Configuration.Server.Host, _Configuration.Server.Port);
+			_Client = new TcpClient(_Configuration.Server.Host, _Configuration.Server.Port);
+			_Stream = new SslStream(_Client.GetStream(), false);
+			X509Certificate certificate = new X509Certificate(_Configuration.ClientCertificate);
+			X509CertificateCollection collection = new X509CertificateCollection();
+			collection.Add(certificate);
+			_Stream.AuthenticateAsClient(_Configuration.Server.CommonName, collection, SslProtocols.Ssl3, false);
+
+			WriteLine("Connected to the server");
+
+			_ProtocolHandler = new NRPCProtocol(_Stream, this, this);
+			_ProtocolHandler.GetNotificationCount(GetNotificationCountCallback);
+			while (_Running)
+				_ProtocolHandler.ProcessUnit();
 		}
 	}
 }

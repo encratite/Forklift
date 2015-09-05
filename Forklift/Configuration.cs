@@ -2,10 +2,12 @@
 {
 	public class Configuration
 	{
-		public ServerConfiguration Server;
+		public ServerConfiguration Server { get; set; }
 
-		public string Database;
-		public string ClientCertificate;
-		public int ReconnectDelay;
+		public string Database { get; set; }
+
+		public string ClientCertificate { get; set; }
+
+		public int ReconnectDelay { get; set; }
 	}
 }

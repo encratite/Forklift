@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Xml.Serialization;
 using System.ComponentModel;
-
+using System.Xml.Serialization;
 using Newtonsoft.Json;
-
 using Nil;
 
 namespace Forklift
@@ -24,91 +22,83 @@ namespace Forklift
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public DateTime Time;
-
-		[XmlIgnore]
-		[JsonIgnore]
-		string description;
+		public DateTime Time { get; set; }
 
 		[JsonIgnore]
 		public string Description
 		{
 			get
 			{
-				return description;
+				return _Description;
 			}
 
 			set
 			{
-				description = value;
+				_Description = value;
 				Notify("Description");
 			}
 		}
-
-		[XmlIgnore]
-		[JsonIgnore]
-		string timeString;
 
 		[JsonIgnore]
 		public string TimeString
 		{
 			get
 			{
-				return timeString;
+				return _TimeString;
 			}
 
 			set
 			{
-				timeString = value;
+				_TimeString = value;
 				Notify("TimeString");
 			}
 		}
-
-		[XmlIgnore]
-		[JsonIgnore]
-		string colour;
 
 		[JsonIgnore]
 		public string Colour
 		{
 			get
 			{
-				return colour;
+				return _Colour;
 			}
 
 			set
 			{
-				colour = value;
+				_Colour = value;
 				Notify("Colour");
 			}
 		}
-
-		[XmlIgnore]
-		[JsonIgnore]
-		string imageString;
 
 		[JsonIgnore]
 		public string ImageString
 		{
 			get
 			{
-				return imageString;
+				return _ImageString;
 			}
 
 			set
 			{
-				imageString = value;
+				_ImageString = value;
 				Notify("ImageString");
 			}
 		}
 
-		void Notify(string propertyName)
-		{
-			if (PropertyChanged != null)
-			{
-				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-			}
-		}
+		[XmlIgnore]
+		[JsonIgnore]
+		private string _Description;
+
+		[XmlIgnore]
+		[JsonIgnore]
+		private string _TimeString;
+
+		[XmlIgnore]
+		[JsonIgnore]
+		private string _Colour;
+
+		[XmlIgnore]
+		[JsonIgnore]
+		private string _ImageString;
 
 		public void Initialise(bool isNew)
 		{
@@ -118,9 +108,18 @@ namespace Forklift
 			ImageString = GetImageString();
 		}
 
+		public abstract NotificationType GetNotificationType();
+
 		protected abstract string GetDescription();
+
 		protected abstract string GetImageString();
 
-		public abstract NotificationType GetNotificationType();
+		private void Notify(string propertyName)
+		{
+			if (PropertyChanged != null)
+			{
+				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
 	}
 }

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.Security;
 using System.Text;
-using System.Threading;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,95 +12,24 @@ namespace Forklift
 	{
 		public delegate void RPCResultCallback(params object[] arguments);
 
-		const int MaximumBufferSize = 0x400 * ByteBufferSize;
-		const int ByteBufferSize = 0x1000;
+		private const int MaximumBufferSize = 0x400 * ByteBufferSize;
+		private const int ByteBufferSize = 0x1000;
 
-		const string GetNewNotificationsMethod = "getNewNotifications";
-		const string GetNotificationCountMethod = "getNotificationCount";
-		const string GetNotificationsMethod = "getNotifications";
-		const string GenerateNotificationMethod = "generateNotification";
+		private const string GetNewNotificationsMethod = "getNewNotifications";
+		private const string GetNotificationCountMethod = "getNotificationCount";
+		private const string GetNotificationsMethod = "getNotifications";
+		private const string GenerateNotificationMethod = "generateNotification";
 
-		SslStream Stream;
+		private SslStream _Stream;
 
-		INotificationHandler NotificationHandler;
-		IOutputHandler OutputHandler;
+		private INotificationHandler _NotificationHandler;
+		private IOutputHandler _OutputHandler;
 
+		private byte[] _ByteBuffer;
+		private string _Buffer;
 
-		byte[] ByteBuffer;
-		string Buffer;
-
-		int CallCounter;
-		Dictionary<int, RPCResultCallback> Callbacks;
-
-		public NRPCProtocol(SslStream stream, INotificationHandler notificationHandler, IOutputHandler outputHandler)
-		{
-			Stream = stream;
-
-			NotificationHandler = notificationHandler;
-			OutputHandler = outputHandler;
-
-			ByteBuffer = new byte[ByteBufferSize];
-			Buffer = "";
-
-			CallCounter = 1;
-			Callbacks = new Dictionary<int, RPCResultCallback>();
-		}
-
-		//Returns true if the connection is still alive
-		void ReadBlock()
-		{
-			try
-			{
-				int bytesRead = Stream.Read(ByteBuffer, 0, ByteBufferSize);
-				if (bytesRead == 0)
-					throw new NRPCException("The connection has been closed");
-
-				string input = Encoding.UTF8.GetString(ByteBuffer, 0, bytesRead);
-				Buffer += input;
-			}
-			catch (IOException exception)
-			{
-				throw new NRPCException(string.Format("IO exception: {0}", exception));
-			}
-		}
-
-		//Returns null if the connection was terminated
-		string ReadUnitString()
-		{
-			int? unitSize = null;
-			while(true)
-			{
-				ReadBlock();
-				int offset = Buffer.IndexOf(':');
-				if (offset != -1)
-				{
-					string sizeString = Buffer.Substring(0, offset);
-					try
-					{
-						unitSize = Convert.ToInt32(sizeString);
-						if (unitSize > MaximumBufferSize)
-							throw new NRPCException("The server has specified an excessively large unit size value");
-						Buffer = Buffer.Substring(offset + 1);
-						break;
-					}
-					catch (FormatException)
-					{
-						throw new NRPCException("Encountered an invalid size string");
-					}
-				}
-			}
-			while (Buffer.Length < unitSize)
-				ReadBlock();
-			string unitString = Buffer.Substring(0, unitSize.Value);
-			Buffer = Buffer.Substring(unitSize.Value);
-
-			return unitString;
-		}
-
-		void NotImplemented()
-		{
-			throw new NRPCException("This feature has not been implemented yet");
-		}
+		private int _CallCounter;
+		private Dictionary<int, RPCResultCallback> _Callbacks;
 
 		public static DeserialisedType DeserialiseObject<DeserialisedType>(object input)
 		{
@@ -118,28 +45,25 @@ namespace Forklift
 			return output;
 		}
 
-		static Notification GetUninitialisedNotification(object input)
-		{
-			NotificationData baseNotification = DeserialiseObject<NotificationData>(input);
-			if (baseNotification.Type == "queued")
-				return DeserialiseNotification<QueuedNotification>(baseNotification);
-			else if (baseNotification.Type == "downloaded")
-				return DeserialiseNotification<DownloadedNotification>(baseNotification);
-			else if (baseNotification.Type == "downloadError")
-				return DeserialiseNotification<DownloadError>(baseNotification);
-			else if (baseNotification.Type == "downloadDeleted")
-				return DeserialiseNotification<DownloadDeletedNotification>(baseNotification);
-			else if (baseNotification.Type == "serviceMessage")
-				return DeserialiseNotification<ServiceMessage>(baseNotification);
-			else
-				throw new NRPCException("Encountered an unknown notification type string");
-		}
-
 		public static Notification GetNotification(object input)
 		{
 			Notification output = GetUninitialisedNotification(input);
 			output.Initialise(true);
 			return output;
+		}
+
+		public NRPCProtocol(SslStream stream, INotificationHandler notificationHandler, IOutputHandler outputHandler)
+		{
+			_Stream = stream;
+
+			_NotificationHandler = notificationHandler;
+			_OutputHandler = outputHandler;
+
+			_ByteBuffer = new byte[ByteBufferSize];
+			_Buffer = "";
+
+			_CallCounter = 1;
+			_Callbacks = new Dictionary<int, RPCResultCallback>();
 		}
 
 		public void ProcessUnit()
@@ -148,18 +72,17 @@ namespace Forklift
 			Unit unit = JsonConvert.DeserializeObject<Unit>(unitString);
 			if (unit.Type == "notification")
 			{
-				Notification notification = GetNotification(unit.Data);
-				Type notificationType = notification.GetType();
-				if (notificationType == typeof(QueuedNotification))
-					NotificationHandler.HandleQueuedNotification((QueuedNotification)notification);
-				else if (notificationType == typeof(DownloadedNotification))
-					NotificationHandler.HandleDownloadedNotification((DownloadedNotification)notification);
-				else if (notificationType == typeof(DownloadError))
-					NotificationHandler.HandleDownloadError((DownloadError)notification);
-				else if (notificationType == typeof(DownloadDeletedNotification))
-					NotificationHandler.HandleDownloadDeletedNotification((DownloadDeletedNotification)notification);
-				else if (notificationType == typeof(ServiceMessage))
-					NotificationHandler.HandleServiceMessage((ServiceMessage)notification);
+				var notification = GetNotification(unit.Data);
+				if (notification is QueuedNotification)
+					_NotificationHandler.HandleQueuedNotification((QueuedNotification)notification);
+				else if (notification is DownloadedNotification)
+					_NotificationHandler.HandleDownloadedNotification((DownloadedNotification)notification);
+				else if (notification is DownloadError)
+					_NotificationHandler.HandleDownloadError((DownloadError)notification);
+				else if (notification is DownloadDeletedNotification)
+					_NotificationHandler.HandleDownloadDeletedNotification((DownloadDeletedNotification)notification);
+				else if (notification is ServiceMessage)
+					_NotificationHandler.HandleServiceMessage((ServiceMessage)notification);
 				else
 					throw new NRPCException("Encountered an unknown notification class type");
 			}
@@ -167,9 +90,9 @@ namespace Forklift
 			{
 				RPCResult result = DeserialiseObject<RPCResult>(unit.Data);
 				RPCResultCallback callback;
-				if (!Callbacks.TryGetValue(result.Id, out callback))
+				if (!_Callbacks.TryGetValue(result.Id, out callback))
 					throw new NRPCException("Server provided an invalid RPC result ID");
-				Callbacks.Remove(result.Id);
+				_Callbacks.Remove(result.Id);
 				if (result.Error == null)
 					callback(result.Result);
 				else
@@ -178,32 +101,12 @@ namespace Forklift
 			else if (unit.Type == "error")
 			{
 				string message = (string)unit.Data;
-				NotificationHandler.HandleError(message);
+				_NotificationHandler.HandleError(message);
 			}
 			else if (unit.Type == "ping")
-				NotificationHandler.HandlePing();
+				_NotificationHandler.HandlePing();
 			else
 				throw new NRPCException("Encountered an unknown unit type");
-		}
-
-		void SendUnitString(string unitString)
-		{
-			string packet = unitString.Length.ToString() + ":" + unitString;
-			Stream.Write(Encoding.UTF8.GetBytes(packet));
-		}
-
-		void SendUnit(object unit)
-		{
-			SendUnitString(JsonConvert.SerializeObject(unit));
-		}
-
-		void PerformRPC(RPCResultCallback callback, string method, params object[] arguments)
-		{
-			RPCCall call = new RPCCall(CallCounter, method, arguments);
-			Unit unit = new Unit(call);
-			SendUnit(unit);
-			Callbacks[CallCounter] = callback;
-			CallCounter++;
 		}
 
 		public void GetNewNotifications(RPCResultCallback callback)
@@ -224,6 +127,98 @@ namespace Forklift
 		public void GenerateNotification(RPCResultCallback callback, string type, object content)
 		{
 			PerformRPC(callback, GenerateNotificationMethod, type, content);
+		}
+
+		private static Notification GetUninitialisedNotification(object input)
+		{
+			NotificationData baseNotification = DeserialiseObject<NotificationData>(input);
+			if (baseNotification.Type == "queued")
+				return DeserialiseNotification<QueuedNotification>(baseNotification);
+			else if (baseNotification.Type == "downloaded")
+				return DeserialiseNotification<DownloadedNotification>(baseNotification);
+			else if (baseNotification.Type == "downloadError")
+				return DeserialiseNotification<DownloadError>(baseNotification);
+			else if (baseNotification.Type == "downloadDeleted")
+				return DeserialiseNotification<DownloadDeletedNotification>(baseNotification);
+			else if (baseNotification.Type == "serviceMessage")
+				return DeserialiseNotification<ServiceMessage>(baseNotification);
+			else
+				throw new NRPCException("Encountered an unknown notification type string");
+		}
+
+		private void ReadBlock()
+		{
+			try
+			{
+				int bytesRead = _Stream.Read(_ByteBuffer, 0, ByteBufferSize);
+				if (bytesRead == 0)
+					throw new NRPCException("The connection has been closed");
+
+				string input = Encoding.UTF8.GetString(_ByteBuffer, 0, bytesRead);
+				_Buffer += input;
+			}
+			catch (IOException exception)
+			{
+				throw new NRPCException(string.Format("IO exception: {0}", exception));
+			}
+		}
+
+		// Returns null if the connection was terminated
+		private string ReadUnitString()
+		{
+			int? unitSize = null;
+			while(true)
+			{
+				ReadBlock();
+				int offset = _Buffer.IndexOf(':');
+				if (offset != -1)
+				{
+					string sizeString = _Buffer.Substring(0, offset);
+					try
+					{
+						unitSize = Convert.ToInt32(sizeString);
+						if (unitSize > MaximumBufferSize)
+							throw new NRPCException("The server has specified an excessively large unit size value");
+						_Buffer = _Buffer.Substring(offset + 1);
+						break;
+					}
+					catch (FormatException)
+					{
+						throw new NRPCException("Encountered an invalid size string");
+					}
+				}
+			}
+			while (_Buffer.Length < unitSize)
+				ReadBlock();
+			string unitString = _Buffer.Substring(0, unitSize.Value);
+			_Buffer = _Buffer.Substring(unitSize.Value);
+
+			return unitString;
+		}
+
+		private void NotImplemented()
+		{
+			throw new NRPCException("This feature has not been implemented yet");
+		}
+
+		private void SendUnitString(string unitString)
+		{
+			string packet = unitString.Length.ToString() + ":" + unitString;
+			_Stream.Write(Encoding.UTF8.GetBytes(packet));
+		}
+
+		private void SendUnit(object unit)
+		{
+			SendUnitString(JsonConvert.SerializeObject(unit));
+		}
+
+		private void PerformRPC(RPCResultCallback callback, string method, params object[] arguments)
+		{
+			var call = new RPCCall(_CallCounter, method, arguments);
+			var unit = new Unit(call);
+			SendUnit(unit);
+			_Callbacks[_CallCounter] = callback;
+			_CallCounter++;
 		}
 	}
 }

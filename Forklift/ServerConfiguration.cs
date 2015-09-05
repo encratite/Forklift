@@ -2,8 +2,10 @@
 {
 	public class ServerConfiguration
 	{
-		public string Host;
-		public int Port;
-		public string CommonName;
+		public string Host { get; set; }
+
+		public int Port { get; set; }
+
+		public string CommonName { get; set; }
 	}
 }

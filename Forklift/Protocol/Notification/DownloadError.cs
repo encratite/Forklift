@@ -5,10 +5,15 @@ namespace Forklift
 	public class DownloadError : Notification
 	{
 		[JsonProperty("release")]
-		public string Release;
+		public string Release { get; set; }
 
 		[JsonProperty("message")]
-		public string Message;
+		public string Message { get; set; }
+
+		public override NotificationType GetNotificationType()
+		{
+			return NotificationType.Error;
+		}
 
 		protected override string GetDescription()
 		{
@@ -18,11 +23,6 @@ namespace Forklift
 		protected override string GetImageString()
 		{
 			return "DownloadError";
-		}
-
-		public override NotificationType GetNotificationType()
-		{
-			return NotificationType.Error;
 		}
 	}
 }

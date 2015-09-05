@@ -5,10 +5,18 @@ namespace Forklift
 	public class ServiceMessage : Notification
 	{
 		[JsonProperty("severity")]
-		public string Severity;
+		public string Severity { get; set; }
 
 		[JsonProperty("message")]
-		public string Message;
+		public string Message { get; set; }
+
+		public override NotificationType GetNotificationType()
+		{
+			if (Severity == "warning" || Severity == "error")
+				return NotificationType.Error;
+			else
+				return NotificationType.Information;
+		}
 
 		protected override string GetDescription()
 		{
@@ -18,14 +26,6 @@ namespace Forklift
 		protected override string GetImageString()
 		{
 			return "ServiceMessage";
-		}
-
-		public override NotificationType GetNotificationType()
-		{
-			if (Severity == "warning" || Severity == "error")
-				return NotificationType.Error;
-			else
-				return NotificationType.Information;
 		}
 	}
 }

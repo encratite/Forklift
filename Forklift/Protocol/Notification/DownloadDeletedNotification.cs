@@ -5,10 +5,15 @@ namespace Forklift
 	public class DownloadDeletedNotification : Notification
 	{
 		[JsonProperty("release")]
-		public string Release;
+		public string Release { get; set; }
 
 		[JsonProperty("reason")]
-		public string Reason;
+		public string Reason { get; set; }
+
+		public override NotificationType GetNotificationType()
+		{
+			return NotificationType.Error;
+		}
 
 		protected override string GetDescription()
 		{
@@ -18,11 +23,6 @@ namespace Forklift
 		protected override string GetImageString()
 		{
 			return "DownloadDeleted";
-		}
-
-		public override NotificationType GetNotificationType()
-		{
-			return NotificationType.Error;
 		}
 	}
 }

@@ -5,13 +5,13 @@ namespace Forklift
 	public class RPCCall
 	{
 		[JsonProperty("id")]
-		public readonly int Id;
+		public int Id { get; private set; }
 
 		[JsonProperty("method")]
-		public readonly string Method;
+		public string Method { get; private set; }
 
 		[JsonProperty("params")]
-		public readonly object[] Arguments;
+		public object[] Arguments { get; private set; }
 
 		public RPCCall(int id, string method, params object[] arguments)
 		{
