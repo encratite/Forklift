@@ -83,7 +83,9 @@
     <Compile Include="Protocol\Notification\ReleaseDataNotification.cs" />
     <Compile Include="Protocol\RPCCall.cs" />
     <Compile Include="Protocol\RPCResult.cs" />
+    <Compile Include="Serializer.cs" />
     <Compile Include="ServerConfiguration.cs" />
+    <Compile Include="Time.cs" />
     <Compile Include="UnixDateTimeConverter.cs" />
     <Compile Include="WarehouseClient.cs" />
     <Page Include="GUI\MainWindow.xaml">
@@ -126,12 +128,6 @@
     <Resource Include="Resource\Image\ServiceMessage.png" />
     <Content Include="Resource\Sound\Error.wav" />
     <Content Include="Resource\Sound\Notification.wav" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Nil\Nil\Nil.csproj">
-      <Project>{1334470a-3e7b-4a4f-a86a-7d6e908b89a7}</Project>
-      <Name>Nil</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

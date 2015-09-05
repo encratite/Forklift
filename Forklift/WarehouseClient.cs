@@ -23,7 +23,7 @@ namespace Forklift
 
 		private NRPCProtocol _ProtocolHandler;
 
-		private Nil.Serialiser<Database> _Serialiser;
+		private Serializer<Database> _Serializer;
 		private Database _Database;
 
 		private Stopwatch _NotificationRetrievalTimer;
@@ -212,8 +212,8 @@ namespace Forklift
 
 		private void LoadDatabase()
 		{
-			_Serialiser = new Nil.Serialiser<Database>(_Configuration.Database);
-			_Database = _Serialiser.Load();
+			_Serializer = new Serializer<Database>(_Configuration.Database);
+			_Database = _Serializer.Load();
 			foreach (var notification in _Database.Notifications)
 				notification.Initialise(false);
 			_Database.Notifications.Sort(CompareNotifications);
@@ -224,7 +224,7 @@ namespace Forklift
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
 			lock (_Database)
-				_Serialiser.Store(_Database);
+				_Serializer.Store(_Database);
 			stopwatch.Stop();
 		}
 

@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Xml;
-using Nil;
 
 namespace Forklift
 {
 	class Program
 	{
-		const string ConfigurationFile = "Configuration.xml";
-
 		[STAThread]
 		public static void Main(string[] arguments)
 		{
 			Configuration configuration;
 			try
 			{
-				Serialiser<Configuration> serialiser = new Serialiser<Configuration>(ConfigurationFile);
+				var serialiser = new Serializer<Configuration>("Configuration.xml");
 				configuration = serialiser.Load();
 			}
 			catch (XmlException exception)
@@ -23,7 +20,7 @@ namespace Forklift
 				return;
 			}
 
-			WarehouseClient client = new WarehouseClient(configuration);
+			var client = new WarehouseClient(configuration);
 			client.Run();
 		}
 	}

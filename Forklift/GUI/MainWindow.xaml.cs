@@ -31,7 +31,7 @@ namespace Forklift
 		public void WriteLine(string message, params object[] arguments)
 		{
 			message = string.Format(message, arguments);
-			message = string.Format("{0} {1}", Nil.Time.Timestamp(), message);
+			message = string.Format("{0} {1}", Time.Timestamp(), message);
 			if (IsFirstLine)
 				IsFirstLine = false;
 			else
